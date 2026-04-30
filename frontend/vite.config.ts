@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
-  base: process.env.GITHUB_PAGES === 'true' ? '/diploma/' : '/',
+  base: process.env.GITHUB_PAGES === 'true' ? '/paidaly/' : '/',
   plugins: [
     react(),
     VitePWA({
@@ -13,8 +13,8 @@ export default defineConfig({
         name: 'Paidaly',
         short_name: 'Paidaly',
         description: 'Доставка здорового питания в Алматы',
-        start_url: '/',
-        scope: '/',
+        start_url: './',
+        scope: './',
         display: 'standalone',
         orientation: 'portrait',
         background_color: '#F7FAF5',
