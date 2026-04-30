@@ -37,6 +37,7 @@ export class HttpErrorFilter implements ExceptionFilter {
       return;
     }
 
+    console.error('[INTERNAL_ERROR]', exception);
     response.status(500).json({
       code: 'INTERNAL_ERROR',
       message: 'Внутренняя ошибка сервера',
