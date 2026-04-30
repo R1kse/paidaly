@@ -1,0 +1,19 @@
+{
+  "name": "delivery-app",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "npm --workspace backend run start:dev",
+    "dev:frontend": "npm --workspace frontend run dev",
+    "build": "npm --workspace backend run build && npm --workspace frontend run build",
+    "lint": "npm --workspace backend run lint && npm --workspace frontend run lint"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

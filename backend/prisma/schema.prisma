@@ -1,0 +1,302 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CLIENT
+  COURIER
+  DISPATCHER
+}
+
+enum ModifierGroupType {
+  SINGLE
+  MULTI
+}
+
+enum DishType {
+  BREAKFAST
+  SOUP
+  MAIN
+  SALAD
+  SNACK
+  DESSERT
+  DRINK
+}
+
+enum OrderStatus {
+  CREATED
+  CONFIRMED
+  COOKING
+  PICKED_UP
+  ON_THE_WAY
+  DELIVERED
+  CANCELED
+}
+
+enum DeliveryType {
+  DELIVERY
+  PICKUP
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  KASPI
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id                String            @id @default(cuid())
+  role              UserRole
+  name              String
+  phone             String?
+  email             String            @unique
+  passwordHash      String?
+  googleId          String?           @unique
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  clientOrders      Order[]           @relation("ClientOrders")
+  courierDeliveries Delivery[]        @relation("CourierDeliveries")
+  courierLocations  CourierLocation[] @relation("CourierLocations")
+  pushSubscriptions PushSubscription[]
+  savedAddresses    SavedAddress[]
+  auditLogs         AuditLog[]        @relation("AuditActor")
+}
+
+enum AuditAction {
+  ORDER_CREATED
+  ORDER_STATUS_CHANGED
+  ORDER_CANCELED
+  COURIER_ASSIGNED
+  PAYMENT_STATUS_CHANGED
+}
+
+model AuditLog {
+  id          String      @id @default(cuid())
+  actorUserId String
+  action      AuditAction
+  orderId     String?
+  data        Json?
+  createdAt   DateTime    @default(now())
+
+  actorUser User @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: Cascade)
+
+  @@index([actorUserId])
+  @@index([orderId, createdAt])
+}
+
+model RestaurantSettings {
+  id               String   @id @default(cuid())
+  restaurantName   String   @unique
+  restaurantLat    Float
+  restaurantLng    Float
+  freeDeliveryRadiusKm Int  @default(4)
+  longDistanceFeeKzt Int    @default(1500)
+  minOrderAmount   Int      @default(5000)
+  openMinutes      Int      @default(540)
+  closeMinutes     Int      @default(1080)
+  allowPreorder    Boolean  @default(true)
+  updatedAt        DateTime @updatedAt
+}
+
+model MenuCategory {
+  id        String     @id @default(cuid())
+  slug      String?    @unique
+  title     String     @unique
+  description String?
+  sortOrder Int        @default(0)
+  isActive  Boolean    @default(true)
+  items     MenuItem[]
+}
+
+model MenuItem {
+  id             String                  @id @default(cuid())
+  slug           String?                 @unique
+  categoryId     String
+  title          String
+  description    String?
+  ingredients    String                 @default("")
+  allergens      String[]               @default([])
+  dietTags       String[]               @default([])
+  dishType       DishType               @default(MAIN)
+  price          Int
+  calories       Int?
+  protein        Int?
+  carbs          Int?
+  fat            Int?
+  imageUrl       String?
+  isActive       Boolean                 @default(true)
+  category       MenuCategory            @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  modifierGroups MenuItemModifierGroup[]
+  orderItems     OrderItem[]
+
+  @@index([categoryId])
+}
+
+model ModifierGroup {
+  id          String                  @id @default(cuid())
+  title       String                  @unique
+  type        ModifierGroupType
+  required    Boolean                 @default(false)
+  minSelected Int                     @default(0)
+  maxSelected Int                     @default(1)
+  sortOrder   Int                     @default(0)
+  options     ModifierOption[]
+  menuItems   MenuItemModifierGroup[]
+}
+
+model ModifierOption {
+  id                 String              @id @default(cuid())
+  groupId            String
+  title              String
+  priceDelta         Int                 @default(0)
+  isActive           Boolean             @default(true)
+  sortOrder          Int                 @default(0)
+  group              ModifierGroup       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  orderItemModifiers OrderItemModifier[]
+
+  @@unique([groupId, title])
+  @@index([groupId])
+}
+
+model MenuItemModifierGroup {
+  menuItemId      String
+  modifierGroupId String
+  menuItem        MenuItem       @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  modifierGroup   ModifierGroup  @relation(fields: [modifierGroupId], references: [id], onDelete: Cascade)
+
+  @@id([menuItemId, modifierGroupId])
+  @@index([modifierGroupId])
+}
+
+model Order {
+  id                String       @id @default(cuid())
+  clientId          String
+  status            OrderStatus  @default(CREATED)
+  deliveryType      DeliveryType @default(DELIVERY)
+  comment           String?
+  scheduledFor      DateTime?
+  addressText       String?
+  addressLat        Float?
+  addressLng        Float?
+  distanceKm        Float?
+  subtotalAmount    Int
+  deliveryFeeAmount Int          @default(0)
+  totalAmount       Int
+  cancelReason      String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  client            User         @relation("ClientOrders", fields: [clientId], references: [id], onDelete: Restrict)
+  orderItems        OrderItem[]
+  payment           Payment?
+  delivery          Delivery?
+
+  @@index([status])
+  @@index([clientId])
+}
+
+model OrderItem {
+  id           String              @id @default(cuid())
+  orderId      String
+  menuItemId   String
+  titleSnapshot String
+  unitPrice    Int
+  quantity     Int
+  lineTotal    Int
+  order        Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem     MenuItem            @relation(fields: [menuItemId], references: [id], onDelete: Restrict)
+  modifiers    OrderItemModifier[]
+
+  @@index([orderId])
+  @@index([menuItemId])
+}
+
+model OrderItemModifier {
+  id                 String         @id @default(cuid())
+  orderItemId        String
+  modifierOptionId   String
+  titleSnapshot      String
+  priceDeltaSnapshot Int
+  orderItem          OrderItem      @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  modifierOption     ModifierOption @relation(fields: [modifierOptionId], references: [id], onDelete: Restrict)
+
+  @@index([orderItemId])
+  @@index([modifierOptionId])
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  orderId     String        @unique
+  method      PaymentMethod
+  status      PaymentStatus @default(PENDING)
+  amount      Int
+  providerRef String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  order       Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Delivery {
+  id          String   @id @default(cuid())
+  orderId     String   @unique
+  courierId   String
+  assignedAt  DateTime @default(now())
+  pickedUpAt  DateTime?
+  deliveredAt DateTime?
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  courier     User     @relation("CourierDeliveries", fields: [courierId], references: [id], onDelete: Restrict)
+
+  @@index([courierId])
+}
+
+model CourierLocation {
+  id         String   @id @default(cuid())
+  courierId  String
+  lat        Float
+  lng        Float
+  accuracy   Float?
+  heading    Float?
+  speed      Float?
+  recordedAt DateTime @default(now())
+  courier    User     @relation("CourierLocations", fields: [courierId], references: [id], onDelete: Cascade)
+
+  @@index([courierId, recordedAt])
+}
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+model SavedAddress {
+  id          String   @id @default(cuid())
+  userId      String
+  label       String
+  addressText String
+  lat         Float
+  lng         Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}

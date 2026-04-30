@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Доставка Курьер</string>
+    <string name="title_activity_main">Доставка Курьер</string>
+    <string name="package_name">kz.diploma.delivery</string>
+    <string name="custom_url_scheme">kz.diploma.delivery</string>
+</resources>

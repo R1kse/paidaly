@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Paidaly — Дизайн системы</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --accent: #6c63ff;
+    --accent2: #4ecdc4;
+    --accent3: #ff6b6b;
+    --accent4: #ffd93d;
+    --text: #e8eaf6;
+    --text2: #8b92b8;
+    --green: #4caf50;
+    --orange: #ff9800;
+    --red: #f44336;
+    --blue: #2196f3;
+    --sidebar-w: 240px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; overflow: hidden; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w); background: var(--surface); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; flex-shrink: 0; height: 100vh; overflow-y: auto;
+  }
+  .sidebar-logo { padding: 20px 18px 14px; display: flex; align-items: center; gap: 10px; }
+  .logo-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .logo-text { font-size: 17px; font-weight: 700; letter-spacing: .4px; }
+  .logo-sub { font-size: 10px; color: var(--text2); margin-top: 1px; }
+  .sidebar-section { padding: 8px 10px 4px; font-size: 10px; text-transform: uppercase;
+    letter-spacing: 1.2px; color: var(--text2); margin-top: 8px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 14px; margin: 1px 6px;
+    border-radius: 8px; cursor: pointer; font-size: 13.5px; color: var(--text2); transition: all .15s; }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(108,99,255,.18); color: var(--accent); font-weight: 600; }
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+  .nav-badge { margin-left: auto; background: var(--accent3); color: #fff; font-size: 10px;
+    font-weight: 700; padding: 1px 6px; border-radius: 10px; }
+  .sidebar-bottom { margin-top: auto; padding: 14px; border-top: 1px solid var(--border); }
+  .user-card { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 8px;
+    background: var(--surface2); cursor: pointer; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent);
+    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .user-info { flex: 1; }
+  .user-name { font-size: 13px; font-weight: 600; }
+  .user-role { font-size: 10px; color: var(--text2); }
+
+  /* ── MAIN ── */
+  .main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  .topbar { height: 56px; background: var(--surface); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 24px; gap: 14px; flex-shrink: 0; }
+  .topbar-title { font-size: 15px; font-weight: 700; }
+  .topbar-sub { font-size: 12px; color: var(--text2); }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .btn { padding: 7px 14px; border-radius: 8px; border: none; font-size: 12.5px; font-weight: 600;
+    cursor: pointer; transition: all .15s; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #7c75ff; }
+  .btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+  .badge { padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-green { background: rgba(76,175,80,.2); color: var(--green); }
+  .badge-orange { background: rgba(255,152,0,.2); color: var(--orange); }
+  .badge-red { background: rgba(244,67,54,.2); color: var(--red); }
+  .badge-blue { background: rgba(33,150,243,.2); color: var(--blue); }
+  .badge-purple { background: rgba(108,99,255,.2); color: var(--accent); }
+  .badge-gray { background: rgba(139,146,184,.15); color: var(--text2); }
+
+  .content { flex: 1; overflow-y: auto; padding: 22px 24px; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── GRIDS ── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
+  .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 20px; position: relative; overflow: hidden; }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .kpi-card.c1::before { background: var(--accent); }
+  .kpi-card.c2::before { background: var(--accent2); }
+  .kpi-card.c3::before { background: var(--accent3); }
+  .kpi-card.c4::before { background: var(--accent4); }
+  .kpi-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .8px; }
+  .kpi-value { font-size: 28px; font-weight: 700; margin: 8px 0 4px; line-height: 1; }
+  .kpi-delta { font-size: 11.5px; }
+  .kpi-delta.up { color: var(--green); }
+  .kpi-delta.down { color: var(--red); }
+  .kpi-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 32px; opacity: .15; }
+
+  .charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 20px; }
+  .charts-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+  .card-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
+  .card-title span { font-size: 11px; color: var(--text2); font-weight: 400; }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 8px 12px; color: var(--text2); font-size: 11px;
+    text-transform: uppercase; letter-spacing: .8px; border-bottom: 1px solid var(--border); font-weight: 600; }
+  td { padding: 10px 12px; border-bottom: 1px solid rgba(46,51,80,.5); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(108,99,255,.05); }
+  .order-id { font-family: monospace; font-size: 12px; color: var(--accent2); }
+  .client-cell { display: flex; align-items: center; gap: 8px; }
+  .client-av { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .actions { display: flex; gap: 6px; }
+  .action-btn { padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--text2); font-size: 11px; cursor: pointer; transition: all .15s; }
+  .action-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* ── MAP ── */
+  #map { height: 460px; border-radius: 10px; background: var(--surface2); }
+  .map-legend { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* ── STATUS FLOW ── */
+  .flow-container { display: flex; align-items: center; gap: 0; margin-bottom: 24px; overflow-x: auto; }
+  .flow-step { display: flex; flex-direction: column; align-items: center; position: relative; flex: 1; }
+  .flow-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 16px; font-weight: 700; border: 2px solid var(--border); background: var(--surface2); z-index: 1; }
+  .flow-step.done .flow-circle { background: var(--accent); border-color: var(--accent); }
+  .flow-step.active .flow-circle { background: var(--surface2); border-color: var(--accent); box-shadow: 0 0 0 4px rgba(108,99,255,.25); }
+  .flow-label { font-size: 10px; color: var(--text2); margin-top: 6px; text-align: center; white-space: nowrap; }
+  .flow-step.done .flow-label { color: var(--accent); }
+  .flow-line { height: 2px; flex: 1; background: var(--border); }
+  .flow-line.done { background: var(--accent); }
+
+  /* ── MENU GRID ── */
+  .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 14px; }
+  .menu-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; transition: transform .15s, box-shadow .15s; cursor: pointer; }
+  .menu-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.3); }
+  .menu-img { height: 120px; display: flex; align-items: center; justify-content: center;
+    font-size: 48px; background: var(--surface2); }
+  .menu-body { padding: 12px 14px; }
+  .menu-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .menu-desc { font-size: 11px; color: var(--text2); margin-bottom: 8px; line-height: 1.4; }
+  .menu-footer { display: flex; align-items: center; justify-content: space-between; }
+  .menu-price { font-size: 15px; font-weight: 700; color: var(--accent2); }
+  .menu-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+  .tag { padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 600;
+    background: rgba(108,99,255,.15); color: var(--accent); }
+
+  /* ── CLIENT APP ── */
+  .phone-frame { max-width: 390px; margin: 0 auto; background: var(--surface); border-radius: 20px;
+    border: 2px solid var(--border); overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+  .phone-header { background: var(--surface2); padding: 14px 18px 10px; }
+  .phone-nav { display: flex; justify-content: space-around; padding: 10px 0 4px;
+    background: var(--surface2); border-top: 1px solid var(--border); }
+  .phone-nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px;
+    font-size: 10px; color: var(--text2); cursor: pointer; padding: 6px 12px; border-radius: 8px; }
+  .phone-nav-item.active { color: var(--accent); }
+  .phone-nav-item span { font-size: 18px; }
+  .phone-scroll { height: 560px; overflow-y: auto; }
+  .phone-scroll::-webkit-scrollbar { width: 4px; }
+  .phone-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ── COURIER ── */
+  #courier-map { height: 320px; border-radius: 10px; }
+  .delivery-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+  .step-list { list-style: none; }
+  .step-list li { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .step-list li:last-child { border-bottom: none; }
+  .step-num { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+
+  /* ── ANALYTICS ── */
+  .stat-row { display: flex; gap: 10px; margin-bottom: 8px; align-items: center; }
+  .stat-bar-wrap { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .stat-bar { height: 100%; border-radius: 4px; transition: width .6s; }
+  .stat-label { width: 140px; font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stat-value { width: 50px; text-align: right; font-size: 12px; font-weight: 600; }
+
+  /* ── COURIER CARDS ── */
+  .courier-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 14px; }
+  .courier-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+  .courier-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .courier-av { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 700; }
+  .online-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block; margin-right: 5px; }
+  .offline-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text2); display: inline-block; margin-right: 5px; }
+  .progress-bar { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+  .progress-fill { height: 100%; border-radius: 3px; }
+
+  /* ── SCROLLBAR ── */
+  .content::-webkit-scrollbar { width: 6px; }
+  .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── TABS ── */
+  .tab-bar { display: flex; gap: 4px; background: var(--surface2); padding: 4px; border-radius: 10px; margin-bottom: 20px; }
+  .tab { padding: 7px 16px; border-radius: 7px; font-size: 12.5px; cursor: pointer; color: var(--text2); font-weight: 500; transition: all .15s; }
+  .tab.active { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .section-title { font-size: 16px; font-weight: 700; }
+  .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .filter-btn { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: transparent; font-size: 12px; color: var(--text2); cursor: pointer; }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .search-input { padding: 7px 12px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-size: 13px; outline: none; width: 220px; }
+  .search-input:focus { border-color: var(--accent); }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  @media (max-width: 1100px) { .kpi-grid { grid-template-columns: repeat(2,1fr); } .charts-row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════ SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">🥗</div>
+    <div>
+      <div class="logo-text">Paidaly</div>
+      <div class="logo-sub">Food Delivery System</div>
+    </div>
+  </div>
+
+  <div class="sidebar-section">Диспетчер</div>
+  <div class="nav-item active" onclick="showScreen('dashboard')">
+    <span class="icon">📊</span> Дашборд
+  </div>
+  <div class="nav-item" onclick="showScreen('orders')">
+    <span class="icon">📋</span> Заказы
+    <span class="nav-badge">7</span>
+  </div>
+  <div class="nav-item" onclick="showScreen('couriers')">
+    <span class="icon">🛵</span> Курьеры
+  </div>
+  <div class="nav-item" onclick="showScreen('map')">
+    <span class="icon">🗺️</span> Карта
+  </div>
+
+  <div class="sidebar-section">Меню</div>
+  <div class="nav-item" onclick="showScreen('menu')">
+    <span class="icon">🍽️</span> Позиции
+  </div>
+  <div class="nav-item" onclick="showScreen('categories')">
+    <span class="icon">🏷️</span> Категории
+  </div>
+
+  <div class="sidebar-section">Клиент / Курьер</div>
+  <div class="nav-item" onclick="showScreen('client')">
+    <span class="icon">📱</span> Приложение клиента
+  </div>
+  <div class="nav-item" onclick="showScreen('courier-app')">
+    <span class="icon">🚴</span> Приложение курьера
+  </div>
+
+  <div class="sidebar-bottom">
+    <div class="user-card">
+      <div class="avatar">ДД</div>
+      <div class="user-info">
+        <div class="user-name">Demo Dispatcher</div>
+        <div class="user-role">DISPATCHER</div>
+      </div>
+      <span style="font-size:14px;color:var(--text2)">⚙</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════ MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="topbar-title">Дашборд</div>
+      <div class="topbar-sub">24 апреля 2026 • Сегодня</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-ghost">↺ Обновить</button>
+      <button class="btn btn-primary" onclick="showScreen('orders')">+ Новый заказ</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══════════════════════════════════ SCREEN: DASHBOARD -->
+    <div id="screen-dashboard" class="screen active">
+
+      <!-- KPI -->
+      <div class="kpi-grid">
+        <div class="kpi-card c1">
+          <div class="kpi-label">Заказов сегодня</div>
+          <div class="kpi-value">47</div>
+          <div class="kpi-delta up">↑ +12% к вчера</div>
+          <div class="kpi-icon">📋</div>
+        </div>
+        <div class="kpi-card c2">
+          <div class="kpi-label">Выручка (₸)</div>
+          <div class="kpi-value">126 400</div>
+          <div class="kpi-delta up">↑ +8.4% к вчера</div>
+          <div class="kpi-icon">💰</div>
+        </div>
+        <div class="kpi-card c3">
+          <div class="kpi-label">Активных курьеров</div>
+          <div class="kpi-value">2 / 2</div>
+          <div class="kpi-delta up">● Все онлайн</div>
+          <div class="kpi-icon">🛵</div>
+        </div>
+        <div class="kpi-card c4">
+          <div class="kpi-label">Ср. время доставки</div>
+          <div class="kpi-value">38 мин</div>
+          <div class="kpi-delta down">↑ +3 мин к норме</div>
+          <div class="kpi-icon">⏱</div>
+        </div>
+      </div>
+
+      <!-- Charts row 1 -->
+      <div class="charts-row">
+        <div class="card">
+          <div class="card-title">Заказы по часам <span>сегодня</span></div>
+          <canvas id="chart-hourly" height="90"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-title">По статусам <span>сейчас</span></div>
+          <canvas id="chart-status" height="180"></canvas>
+          <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px">
+            <div class="stat-row"><div class="stat-label">Создан</div><div class="stat-bar-wrap"><div class="stat-bar" style="width:10%;background:#6c63ff"></div></div><div class="stat-value">5</div></div>
+            <div class="stat-row"><div class="stat-label">Подтверждён</div><div class="stat-bar-wrap"><div class="stat-bar" style="width:6%;background:#4ecdc4"></div></div><div class="stat-value">3</div></div>
+            <div class="stat-row"><div class="stat-label">Готовится</div><div class="stat-bar-wrap"><div class="stat-bar" style="width:12%;background:#ffd93d"></div></div><div class="stat-value">6</div></div>
+            <div class="stat-row"><div class="stat-label">Забран курьером</div><div class="stat-bar-wrap"><div class="stat-bar" style="width:4%;background:#ff9800"></div></div><div class="stat-value">2</div></div>
+            <div class="stat-row"><div class="stat-label">В пути</div><div class="stat-bar-wrap"><div class="stat-bar" style="width:8%;background:#2196f3"></div></div><div class="stat-value">4</div></div>
+            <div class="stat-row"><div class="stat-label">Доставлен</div><div class="stat-bar-wrap"><div class="stat-bar" style="width:54%;background:#4caf50"></div></div><div class="stat-value">27</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts row 2 -->
+      <div class="charts-row2">
+        <div class="card">
+          <div class="card-title">Выручка за неделю (₸) <span>тыс.</span></div>
+          <canvas id="chart-revenue" height="100"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-title">Топ блюд <span>по кол-ву заказов</span></div>
+          <canvas id="chart-dishes" height="100"></canvas>
+        </div>
+      </div>
+
+      <!-- Live orders -->
+      <div class="card">
+        <div class="card-title">
+          Активные заказы
+          <span style="cursor:pointer;color:var(--accent)" onclick="showScreen('orders')">Все заказы →</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th><th>Клиент</th><th>Сумма</th><th>Статус</th><th>Курьер</th><th>Время</th><th>Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="order-id">#ORD-1042</span></td>
+                <td><div class="client-cell"><div class="client-av" style="background:#6c63ff22;color:#6c63ff">АБ</div>Айгерим Б.</div></td>
+                <td>7 400 ₸</td>
+                <td><span class="badge badge-blue">В пути</span></td>
+                <td>Курьер 1</td>
+                <td>14:23</td>
+                <td><div class="actions"><button class="action-btn">👁</button><button class="action-btn">✏</button></div></td>
+              </tr>
+              <tr>
+                <td><span class="order-id">#ORD-1043</span></td>
+                <td><div class="client-cell"><div class="client-av" style="background:#4ecdc422;color:#4ecdc4">МС</div>Марат С.</div></td>
+                <td>12 100 ₸</td>
+                <td><span class="badge badge-orange">Готовится</span></td>
+                <td>—</td>
+                <td>14:31</td>
+                <td><div class="actions"><button class="action-btn">👁</button><button class="action-btn">🛵</button></div></td>
+              </tr>
+              <tr>
+                <td><span class="order-id">#ORD-1044</span></td>
+                <td><div class="client-cell"><div class="client-av" style="background:#ff6b6b22;color:#ff6b6b">ДК</div>Дина К.</div></td>
+                <td>5 900 ₸</td>
+                <td><span class="badge badge-orange">Готовится</span></td>
+                <td>—</td>
+                <td>14:38</td>
+                <td><div class="actions"><button class="action-btn">👁</button><button class="action-btn">🛵</button></div></td>
+              </tr>
+              <tr>
+                <td><span class="order-id">#ORD-1045</span></td>
+                <td><div class="client-cell"><div class="client-av" style="background:#ffd93d22;color:#ffd93d">НА</div>Нурлан А.</div></td>
+                <td>9 200 ₸</td>
+                <td><span class="badge badge-purple">Подтверждён</span></td>
+                <td>—</td>
+                <td>14:41</td>
+                <td><div class="actions"><button class="action-btn">👁</button><button class="action-btn">✅</button></div></td>
+              </tr>
+              <tr>
+                <td><span class="order-id">#ORD-1046</span></td>
+                <td><div class="client-cell"><div class="client-av" style="background:#6c63ff22;color:#6c63ff">ЗМ</div>Зарина М.</div></td>
+                <td>6 700 ₸</td>
+                <td><span class="badge badge-gray">Создан</span></td>
+                <td>—</td>
+                <td>14:47</td>
+                <td><div class="actions"><button class="action-btn">👁</button><button class="action-btn">✅</button></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Extra row -->
+      <div class="charts-row2" style="margin-top:20px">
+        <div class="card">
+          <div class="card-title">Способы оплаты <span>сегодня</span></div>
+          <canvas id="chart-payment" height="160"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-title">Тип доставки <span>сегодня</span></div>
+          <canvas id="chart-delivery-type" height="160"></canvas>
+          <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div style="text-align:center;padding:10px;background:var(--surface2);border-radius:8px">
+              <div style="font-size:22px;font-weight:700;color:var(--accent)">38</div>
+              <div style="font-size:11px;color:var(--text2)">Доставка</div>
+            </div>
+            <div style="text-align:center;padding:10px;background:var(--surface2);border-radius:8px">
+              <div style="font-size:22px;font-weight:700;color:var(--accent2)">9</div>
+              <div style="font-size:11px;color:var(--text2)">Самовывоз</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════ SCREEN: ORDERS -->
+    <div id="screen-orders" class="screen">
+      <div class="section-header">
+        <div class="section-title">Управление заказами</div>
+        <button class="btn btn-primary">+ Добавить заказ</button>
+      </div>
+
+      <!-- Status flow -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-title">Флоу заказа</div>
+        <div class="flow-container">
+          <div class="flow-step done">
+            <div class="flow-circle">1</div>
+            <div class="flow-label">СОЗДАН</div>
+          </div>
+          <div class="flow-line done"></div>
+          <div class="flow-step done">
+            <div class="flow-circle">2</div>
+            <div class="flow-label">ПОДТВЕРЖДЁН</div>
+          </div>
+          <div class="flow-line done"></div>
+          <div class="flow-step active">
+            <div class="flow-circle">3</div>
+            <div class="flow-label">ГОТОВИТСЯ</div>
+          </div>
+          <div class="flow-line"></div>
+          <div class="flow-step">
+            <div class="flow-circle">4</div>
+            <div class="flow-label">ЗАБРАН</div>
+          </div>
+          <div class="flow-line"></div>
+          <div class="flow-step">
+            <div class="flow-circle">5</div>
+            <div class="flow-label">В ПУТИ</div>
+          </div>
+          <div class="flow-line"></div>
+          <div class="flow-step">
+            <div class="flow-circle">6</div>
+            <div class="flow-label">ДОСТАВЛЕН</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <button class="filter-btn active">Все (47)</button>
+        <button class="filter-btn">Создан (5)</button>
+        <button class="filter-btn">Подтверждён (3)</button>
+        <button class="filter-btn">Готовится (6)</button>
+        <button class="filter-btn">В пути (4)</button>
+        <button class="filter-btn">Доставлен (27)</button>
+        <button class="filter-btn">Отменён (2)</button>
+        <input class="search-input" placeholder="🔍 Поиск по ID, клиенту..." style="margin-left:auto"/>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>ID</th><th>Клиент</th><th>Позиции</th><th>Сумма</th><th>Тип</th><th>Оплата</th><th>Статус</th><th>Курьер</th><th>Создан</th><th>Действия</th></tr>
+            </thead>
+            <tbody id="orders-table-body">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Order detail -->
+      <div style="margin-top:20px" class="two-col">
+        <div class="card">
+          <div class="card-title">Детали заказа #ORD-1043</div>
+          <div style="margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <span style="color:var(--text2);font-size:12px">Клиент</span>
+              <span style="font-size:13px;font-weight:600">Марат Сейткали</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <span style="color:var(--text2);font-size:12px">Телефон</span>
+              <span style="font-size:13px">+7 701 234 56 78</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <span style="color:var(--text2);font-size:12px">Адрес</span>
+              <span style="font-size:13px">пр. Абая, 14, кв. 23</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <span style="color:var(--text2);font-size:12px">Тип</span>
+              <span class="badge badge-blue" style="font-size:11px">Доставка</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <span style="color:var(--text2);font-size:12px">Оплата</span>
+              <span class="badge badge-orange" style="font-size:11px">Kaspi</span>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--border);padding-top:12px">
+            <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.8px">Состав заказа</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div style="font-size:13px;font-weight:500">Гречка + индейка × 1</div>
+                  <div style="font-size:11px;color:var(--text2)">Порция M · Без лука · Киноа</div>
+                </div>
+                <div style="font-size:13px;font-weight:700">3 350 ₸</div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div style="font-size:13px;font-weight:500">Нежный куриный суп × 2</div>
+                  <div style="font-size:11px;color:var(--text2)">Порция L</div>
+                </div>
+                <div style="font-size:13px;font-weight:700">4 200 ₸</div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div style="font-size:13px;font-weight:500">Компот без сахара × 1</div>
+                  <div style="font-size:11px;color:var(--text2)">Стевия</div>
+                </div>
+                <div style="font-size:13px;font-weight:700">700 ₸</div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--border)">
+                <span style="font-size:11px;color:var(--text2)">Доставка</span>
+                <span style="font-size:13px">1 500 ₸</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:14px;font-weight:700">Итого</span>
+                <span style="font-size:16px;font-weight:700;color:var(--accent2)">12 100 ₸</span>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:14px;display:flex;gap:8px">
+            <button class="btn btn-primary" style="flex:1">Назначить курьера</button>
+            <button class="btn btn-ghost" style="color:var(--red);border-color:var(--red)">Отменить</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">История статусов</div>
+          <ul class="step-list">
+            <li>
+              <div class="step-num">✓</div>
+              <div>
+                <div style="font-size:13px;font-weight:600">СОЗДАН</div>
+                <div style="font-size:11px;color:var(--text2)">14:31 — Клиент оформил заказ</div>
+              </div>
+            </li>
+            <li>
+              <div class="step-num">✓</div>
+              <div>
+                <div style="font-size:13px;font-weight:600">ПОДТВЕРЖДЁН</div>
+                <div style="font-size:11px;color:var(--text2)">14:33 — Диспетчер подтвердил</div>
+              </div>
+            </li>
+            <li>
+              <div class="step-num" style="background:var(--orange)">●</div>
+              <div>
+                <div style="font-size:13px;font-weight:600">ГОТОВИТСЯ</div>
+                <div style="font-size:11px;color:var(--text2)">14:35 — Передан на кухню</div>
+              </div>
+            </li>
+            <li>
+              <div class="step-num" style="background:var(--border);color:var(--text2)">4</div>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text2)">ЗАБРАН КУРЬЕРОМ</div>
+                <div style="font-size:11px;color:var(--text2)">ожидает назначения курьера</div>
+              </div>
+            </li>
+            <li>
+              <div class="step-num" style="background:var(--border);color:var(--text2)">5</div>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text2)">В ПУТИ</div>
+                <div style="font-size:11px;color:var(--text2)">—</div>
+              </div>
+            </li>
+            <li>
+              <div class="step-num" style="background:var(--border);color:var(--text2)">6</div>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text2)">ДОСТАВЛЕН</div>
+                <div style="font-size:11px;color:var(--text2)">—</div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════ SCREEN: COURIERS -->
+    <div id="screen-couriers" class="screen">
+      <div class="section-header">
+        <div class="section-title">Управление курьерами</div>
+        <button class="btn btn-ghost">+ Добавить курьера</button>
+      </div>
+
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
+        <div class="kpi-card c1">
+          <div class="kpi-label">Всего курьеров</div>
+          <div class="kpi-value">2</div>
+          <div class="kpi-delta up">● Оба онлайн</div>
+          <div class="kpi-icon">🛵</div>
+        </div>
+        <div class="kpi-card c2">
+          <div class="kpi-label">Активных доставок</div>
+          <div class="kpi-value">2</div>
+          <div class="kpi-delta up">↑ Полная загрузка</div>
+          <div class="kpi-icon">📦</div>
+        </div>
+        <div class="kpi-card c3">
+          <div class="kpi-label">Доставлено сегодня</div>
+          <div class="kpi-value">27</div>
+          <div class="kpi-delta up">↑ +15% к вчера</div>
+          <div class="kpi-icon">✅</div>
+        </div>
+        <div class="kpi-card c4">
+          <div class="kpi-label">Ср. доставок / курьер</div>
+          <div class="kpi-value">13.5</div>
+          <div class="kpi-delta up">за сегодня</div>
+          <div class="kpi-icon">📈</div>
+        </div>
+      </div>
+
+      <div class="courier-grid">
+        <div class="courier-card">
+          <div class="courier-header">
+            <div class="courier-av" style="background:#6c63ff33;color:var(--accent)">К1</div>
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:700">Demo Courier 1</div>
+              <div style="font-size:11px;color:var(--text2)"><span class="online-dot"></span>Онлайн · В доставке</div>
+            </div>
+            <span class="badge badge-blue">В пути</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+            <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
+              <div style="font-size:18px;font-weight:700;color:var(--accent2)">14</div>
+              <div style="font-size:10px;color:var(--text2)">Доставлено</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
+              <div style="font-size:18px;font-weight:700;color:var(--accent4)">1</div>
+              <div style="font-size:10px;color:var(--text2)">Активных</div>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:4px">Текущий заказ: <strong style="color:var(--text)">#ORD-1042</strong></div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:10px">Адрес: пр. Абая, 14</div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Загрузка дня</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:70%;background:var(--accent)"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-top:4px">
+            <span>14 из 20 макс.</span><span>70%</span>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <button class="btn btn-ghost" style="flex:1;font-size:11px">📍 Локация</button>
+            <button class="btn btn-ghost" style="flex:1;font-size:11px">📞 Связаться</button>
+          </div>
+        </div>
+
+        <div class="courier-card">
+          <div class="courier-header">
+            <div class="courier-av" style="background:#4ecdc433;color:var(--accent2)">К2</div>
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:700">Demo Courier 2</div>
+              <div style="font-size:11px;color:var(--text2)"><span class="online-dot"></span>Онлайн · В доставке</div>
+            </div>
+            <span class="badge badge-blue">В пути</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+            <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
+              <div style="font-size:18px;font-weight:700;color:var(--accent2)">13</div>
+              <div style="font-size:10px;color:var(--text2)">Доставлено</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
+              <div style="font-size:18px;font-weight:700;color:var(--accent4)">1</div>
+              <div style="font-size:10px;color:var(--text2)">Активных</div>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:4px">Текущий заказ: <strong style="color:var(--text)">#ORD-1041</strong></div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:10px">Адрес: ул. Сейфуллина, 55</div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Загрузка дня</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:65%;background:var(--accent2)"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-top:4px">
+            <span>13 из 20 макс.</span><span>65%</span>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <button class="btn btn-ghost" style="flex:1;font-size:11px">📍 Локация</button>
+            <button class="btn btn-ghost" style="flex:1;font-size:11px">📞 Связаться</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <div class="card-title">История доставок сегодня</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Заказ</th><th>Курьер</th><th>Клиент</th><th>Адрес</th><th>Забран</th><th>Доставлен</th><th>Время</th><th>Расстояние</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="order-id">#ORD-1040</span></td><td>Курьер 1</td><td>Алия Н.</td><td>ул. Толе би, 32</td><td>13:15</td><td>13:51</td><td>36 мин</td><td>3.2 км</td></tr>
+              <tr><td><span class="order-id">#ORD-1039</span></td><td>Курьер 2</td><td>Болат М.</td><td>пр. Достык, 8</td><td>12:50</td><td>13:28</td><td>38 мин</td><td>4.8 км</td></tr>
+              <tr><td><span class="order-id">#ORD-1038</span></td><td>Курьер 1</td><td>Сабина Т.</td><td>мкр. Самал, 12</td><td>12:22</td><td>12:58</td><td>36 мин</td><td>2.9 км</td></tr>
+              <tr><td><span class="order-id">#ORD-1037</span></td><td>Курьер 2</td><td>Азамат Е.</td><td>ул. Байзакова, 21</td><td>11:55</td><td>12:40</td><td>45 мин</td><td>6.1 км</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════ SCREEN: MAP -->
+    <div id="screen-map" class="screen">
+      <div class="section-header">
+        <div class="section-title">Карта доставок — Алматы</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost">⟳ Авто-обновление</button>
+          <button class="btn btn-primary">📍 Показать всех</button>
+        </div>
+      </div>
+      <div class="card" style="padding:16px">
+        <div id="map"></div>
+        <div class="map-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#6c63ff"></div>Ресторан</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#4caf50"></div>Курьер (онлайн)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#2196f3"></div>Заказ в пути</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#ff9800"></div>Заказ готовится</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#f44336"></div>Заказ отменён</div>
+        </div>
+      </div>
+      <div class="two-col" style="margin-top:16px">
+        <div class="card">
+          <div class="card-title">Активные маршруты</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="background:var(--surface2);border-radius:8px;padding:12px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                <span style="font-weight:600;font-size:13px">Курьер 1 → пр. Абая, 14</span>
+                <span class="badge badge-blue">В пути</span>
+              </div>
+              <div style="font-size:11px;color:var(--text2)">Осталось ~12 мин · 2.3 км · #ORD-1042</div>
+              <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:65%;background:var(--blue)"></div></div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:12px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                <span style="font-weight:600;font-size:13px">Курьер 2 → ул. Сейфуллина, 55</span>
+                <span class="badge badge-blue">В пути</span>
+              </div>
+              <div style="font-size:11px;color:var(--text2)">Осталось ~18 мин · 3.7 км · #ORD-1041</div>
+              <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:35%;background:var(--blue)"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Зоны доставки</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="stat-row">
+              <div class="stat-label">🟢 Бесплатная (до 4 км)</div>
+              <div class="stat-bar-wrap"><div class="stat-bar" style="width:75%;background:var(--green)"></div></div>
+              <div class="stat-value">36</div>
+            </div>
+            <div class="stat-row">
+              <div class="stat-label">🟡 Платная (+1500 ₸)</div>
+              <div class="stat-bar-wrap"><div class="stat-bar" style="width:6%;background:var(--orange)"></div></div>
+              <div class="stat-value">3</div>
+            </div>
+          </div>
+          <div style="margin-top:16px;padding:12px;background:var(--surface2);border-radius:8px">
+            <div style="font-size:12px;font-weight:700;margin-bottom:8px">Ресторан</div>
+            <div style="font-size:11px;color:var(--text2)">43.238949, 76.889709</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">Режим работы: 09:00–18:00 (Asia/Almaty)</div>
+            <div style="font-size:11px;color:var(--green);margin-top:4px">● Сейчас открыто</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════ SCREEN: MENU -->
+    <div id="screen-menu" class="screen">
+      <div class="section-header">
+        <div class="section-title">Управление меню</div>
+        <button class="btn btn-primary">+ Добавить блюдо</button>
+      </div>
+      <div class="filter-row">
+        <button class="filter-btn active">Все</button>
+        <button class="filter-btn">Завтрак</button>
+        <button class="filter-btn">Суп</button>
+        <button class="filter-btn">Основное</button>
+        <button class="filter-btn">Салат</button>
+        <button class="filter-btn">Десерт</button>
+        <button class="filter-btn">Напиток</button>
+        <button class="filter-btn">Перекус</button>
+        <input class="search-input" placeholder="🔍 Поиск блюда..." style="margin-left:auto"/>
+      </div>
+      <div class="menu-grid" id="menu-grid"></div>
+    </div>
+
+    <!-- ══════════════════════════════════ SCREEN: CATEGORIES -->
+    <div id="screen-categories" class="screen">
+      <div class="section-header">
+        <div class="section-title">Категории меню (диетические направления)</div>
+      </div>
+      <div id="categories-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px"></div>
+    </div>
+
+    <!-- ══════════════════════════════════ SCREEN: CLIENT APP -->
+    <div id="screen-client" class="screen">
+      <div class="section-header">
+        <div class="section-title">Приложение клиента — Макет</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;align-items:start">
+
+        <!-- Phone 1: Menu -->
+        <div>
+          <div style="text-align:center;margin-bottom:10px;font-size:12px;color:var(--text2)">📱 Выбор блюд</div>
+          <div class="phone-frame">
+            <div class="phone-header">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div style="font-size:14px;font-weight:700">🥗 Paidaly</div>
+                  <div style="font-size:10px;color:var(--text2)">Алматы · 09:00–18:00</div>
+                </div>
+                <div style="position:relative">
+                  <span style="font-size:22px">🛒</span>
+                  <span style="position:absolute;top:-4px;right:-6px;background:var(--accent3);color:#fff;font-size:9px;font-weight:700;padding:1px 4px;border-radius:8px">3</span>
+                </div>
+              </div>
+              <div style="margin-top:10px;display:flex;gap:6px;overflow-x:auto;padding-bottom:4px">
+                <button class="filter-btn active" style="white-space:nowrap;font-size:10px">Щадящее ЖКТ</button>
+                <button class="filter-btn" style="white-space:nowrap;font-size:10px">Гастрит</button>
+                <button class="filter-btn" style="white-space:nowrap;font-size:10px">ГЭРБ</button>
+                <button class="filter-btn" style="white-space:nowrap;font-size:10px">Без лактозы</button>
+              </div>
+            </div>
+            <div class="phone-scroll" id="client-menu-scroll">
+              <div style="padding:12px;display:flex;flex-direction:column;gap:10px" id="client-menu-items"></div>
+            </div>
+            <div class="phone-nav">
+              <div class="phone-nav-item active"><span>🏠</span>Меню</div>
+              <div class="phone-nav-item"><span>📋</span>Заказы</div>
+              <div class="phone-nav-item"><span>🗺️</span>Карта</div>
+              <div class="phone-nav-item"><span>👤</span>Профиль</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phone 2: Cart + Checkout -->
+        <div>
+          <div style="text-align:center;margin-bottom:10px;font-size:12px;color:var(--text2)">🛒 Оформление заказа</div>
+          <div class="phone-frame">
+            <div class="phone-header">
+              <div style="font-size:14px;font-weight:700">Оформление заказа</div>
+            </div>
+            <div class="phone-scroll">
+              <div style="padding:12px">
+                <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Состав</div>
+                <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+                  <div style="display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:8px;padding:10px">
+                    <span style="font-size:24px">🥣</span>
+                    <div style="flex:1">
+                      <div style="font-size:12px;font-weight:600">Овсяная каша с бананом</div>
+                      <div style="font-size:10px;color:var(--text2)">Порция M · Стевия</div>
+                    </div>
+                    <div style="text-align:right">
+                      <div style="font-size:13px;font-weight:700">1 400 ₸</div>
+                      <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+                        <button style="width:20px;height:20px;border-radius:4px;background:var(--border);border:none;color:var(--text);cursor:pointer;font-size:12px">−</button>
+                        <span style="font-size:12px">1</span>
+                        <button style="width:20px;height:20px;border-radius:4px;background:var(--accent);border:none;color:#fff;cursor:pointer;font-size:12px">+</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:8px;padding:10px">
+                    <span style="font-size:24px">🍲</span>
+                    <div style="flex:1">
+                      <div style="font-size:12px;font-weight:600">Куриный суп с рисом</div>
+                      <div style="font-size:10px;color:var(--text2)">Порция L</div>
+                    </div>
+                    <div style="text-align:right">
+                      <div style="font-size:13px;font-weight:700">2 100 ₸</div>
+                      <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+                        <button style="width:20px;height:20px;border-radius:4px;background:var(--border);border:none;color:var(--text);cursor:pointer;font-size:12px">−</button>
+                        <span style="font-size:12px">1</span>
+                        <button style="width:20px;height:20px;border-radius:4px;background:var(--accent);border:none;color:#fff;cursor:pointer;font-size:12px">+</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:8px;padding:10px">
+                    <span style="font-size:24px">🍵</span>
+                    <div style="flex:1">
+                      <div style="font-size:12px;font-weight:600">Травяной чай</div>
+                      <div style="font-size:10px;color:var(--text2)">Без подсластителя</div>
+                    </div>
+                    <div style="text-align:right">
+                      <div style="font-size:13px;font-weight:700">600 ₸</div>
+                      <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+                        <button style="width:20px;height:20px;border-radius:4px;background:var(--border);border:none;color:var(--text);cursor:pointer;font-size:12px">−</button>
+                        <span style="font-size:12px">1</span>
+                        <button style="width:20px;height:20px;border-radius:4px;background:var(--accent);border:none;color:#fff;cursor:pointer;font-size:12px">+</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Адрес доставки</div>
+                <div style="background:var(--surface2);border-radius:8px;padding:10px;margin-bottom:12px">
+                  <div style="font-size:12px;font-weight:600">📍 пр. Абая, 14, кв. 23</div>
+                  <div style="font-size:10px;color:var(--text2);margin-top:2px">Алматы, 43.241, 76.893</div>
+                  <div style="font-size:10px;color:var(--accent2);margin-top:4px">Расстояние: 3.2 км · Бесплатная доставка</div>
+                </div>
+                <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Оплата</div>
+                <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+                  <label style="display:flex;align-items:center;gap:8px;background:var(--surface2);padding:10px;border-radius:8px;cursor:pointer;border:1px solid var(--accent)">
+                    <input type="radio" name="pay" checked style="accent-color:var(--accent)"/>
+                    <span style="font-size:13px">💳 Kaspi</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:8px;background:var(--surface2);padding:10px;border-radius:8px;cursor:pointer">
+                    <input type="radio" name="pay" style="accent-color:var(--accent)"/>
+                    <span style="font-size:13px">💵 Наличные</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:8px;background:var(--surface2);padding:10px;border-radius:8px;cursor:pointer">
+                    <input type="radio" name="pay" style="accent-color:var(--accent)"/>
+                    <span style="font-size:13px">💳 Картой</span>
+                  </label>
+                </div>
+                <div style="border-top:1px solid var(--border);padding-top:12px">
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                    <span style="color:var(--text2)">Подытог</span><span>4 100 ₸</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                    <span style="color:var(--text2)">Доставка</span><span style="color:var(--green)">Бесплатно</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;margin-top:8px">
+                    <span>Итого</span><span style="color:var(--accent2)">4 100 ₸</span>
+                  </div>
+                </div>
+                <button class="btn btn-primary" style="width:100%;margin-top:14px;padding:12px">Оформить заказ</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phone 3: Order tracking -->
+        <div>
+          <div style="text-align:center;margin-bottom:10px;font-size:12px;color:var(--text2)">📍 Отслеживание заказа</div>
+          <div class="phone-frame">
+            <div class="phone-header">
+              <div style="font-size:14px;font-weight:700">Заказ #ORD-1042</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:2px">Оформлен в 14:23</div>
+            </div>
+            <div class="phone-scroll">
+              <div style="padding:12px">
+                <!-- Status bar -->
+                <div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:12px;text-align:center">
+                  <div style="font-size:32px;margin-bottom:6px">🛵</div>
+                  <div style="font-size:15px;font-weight:700;color:var(--blue)">Курьер едет к вам</div>
+                  <div style="font-size:12px;color:var(--text2);margin-top:4px">Осталось ~12 минут</div>
+                  <div class="progress-bar" style="margin-top:10px;height:8px">
+                    <div class="progress-fill" style="width:65%;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div>
+                  </div>
+                </div>
+                <!-- Mini map placeholder -->
+                <div id="tracking-map" style="height:180px;border-radius:10px;margin-bottom:12px;background:var(--surface2);display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:12px">
+                  Карта загружается...
+                </div>
+                <!-- Timeline -->
+                <div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:12px">
+                  <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Статус</div>
+                  <div style="display:flex;flex-direction:column;gap:10px">
+                    <div style="display:flex;gap:10px;align-items:center">
+                      <div style="width:20px;height:20px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0">✓</div>
+                      <div style="flex:1"><div style="font-size:12px;font-weight:600">Создан</div><div style="font-size:10px;color:var(--text2)">14:23</div></div>
+                    </div>
+                    <div style="display:flex;gap:10px;align-items:center">
+                      <div style="width:20px;height:20px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0">✓</div>
+                      <div style="flex:1"><div style="font-size:12px;font-weight:600">Подтверждён</div><div style="font-size:10px;color:var(--text2)">14:25</div></div>
+                    </div>
+                    <div style="display:flex;gap:10px;align-items:center">
+                      <div style="width:20px;height:20px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0">✓</div>
+                      <div style="flex:1"><div style="font-size:12px;font-weight:600">Готовится</div><div style="font-size:10px;color:var(--text2)">14:27</div></div>
+                    </div>
+                    <div style="display:flex;gap:10px;align-items:center">
+                      <div style="width:20px;height:20px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0">✓</div>
+                      <div style="flex:1"><div style="font-size:12px;font-weight:600">Забран курьером</div><div style="font-size:10px;color:var(--text2)">14:45</div></div>
+                    </div>
+                    <div style="display:flex;gap:10px;align-items:center">
+                      <div style="width:20px;height:20px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;animation:pulse 1.5s infinite">●</div>
+                      <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--blue)">В пути</div><div style="font-size:10px;color:var(--text2)">14:47 — сейчас</div></div>
+                    </div>
+                    <div style="display:flex;gap:10px;align-items:center;opacity:.4">
+                      <div style="width:20px;height:20px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0">6</div>
+                      <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text2)">Доставлен</div></div>
+                    </div>
+                  </div>
+                </div>
+                <!-- Courier info -->
+                <div style="background:var(--surface2);border-radius:10px;padding:12px">
+                  <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Ваш курьер</div>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <div style="width:38px;height:38px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700">К1</div>
+                    <div style="flex:1">
+                      <div style="font-size:13px;font-weight:600">Demo Courier 1</div>
+                      <div style="font-size:10px;color:var(--text2)">+7 701 000 0002</div>
+                    </div>
+                    <button style="background:var(--accent);border:none;color:#fff;padding:8px 14px;border-radius:8px;font-size:12px;cursor:pointer">📞</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════ SCREEN: COURIER APP -->
+    <div id="screen-courier-app" class="screen">
+      <div class="section-header">
+        <div class="section-title">Приложение курьера — Макет</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;max-width:800px;margin:0 auto">
+
+        <!-- Courier main screen -->
+        <div>
+          <div style="text-align:center;margin-bottom:10px;font-size:12px;color:var(--text2)">🛵 Текущая доставка</div>
+          <div class="phone-frame">
+            <div class="phone-header" style="background:#1a2540">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div style="font-size:13px;font-weight:700">Demo Courier 1</div>
+                  <div style="font-size:10px;color:var(--accent2)"><span class="online-dot"></span>Онлайн</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-size:11px;color:var(--text2)">Заказов сегодня</div>
+                  <div style="font-size:18px;font-weight:700;color:var(--accent4)">14</div>
+                </div>
+              </div>
+            </div>
+            <div id="courier-map"></div>
+            <div class="phone-scroll" style="height:320px">
+              <div style="padding:12px">
+                <div class="delivery-card">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                    <span style="font-size:14px;font-weight:700">Заказ #ORD-1042</span>
+                    <span class="badge badge-blue">В пути</span>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;margin-bottom:12px">
+                    <div style="display:flex;gap:8px">
+                      <span style="color:var(--text2);width:20px">📦</span>
+                      <span>Овсяная каша + Куриный суп + Компот × 3 позиции</span>
+                    </div>
+                    <div style="display:flex;gap:8px">
+                      <span style="color:var(--text2);width:20px">📍</span>
+                      <span>пр. Абая, 14, кв. 23</span>
+                    </div>
+                    <div style="display:flex;gap:8px">
+                      <span style="color:var(--text2);width:20px">👤</span>
+                      <span>Айгерим Б. · +7 701 234 56 78</span>
+                    </div>
+                    <div style="display:flex;gap:8px">
+                      <span style="color:var(--text2);width:20px">💰</span>
+                      <span>7 400 ₸ · Оплата картой</span>
+                    </div>
+                    <div style="display:flex;gap:8px">
+                      <span style="color:var(--text2);width:20px">📏</span>
+                      <span>3.2 км · ~12 мин</span>
+                    </div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                    <button class="btn btn-ghost" style="font-size:11px;padding:8px">📞 Позвонить</button>
+                    <button class="btn btn-primary" style="font-size:11px;padding:8px">✅ Доставлен</button>
+                  </div>
+                </div>
+
+                <div style="background:var(--surface2);border-radius:10px;padding:12px">
+                  <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px">СЛЕДУЮЩИЙ В ОЧЕРЕДИ</div>
+                  <div style="font-size:12px;color:var(--text2)">Нет новых заказов</div>
+                </div>
+              </div>
+            </div>
+            <div class="phone-nav">
+              <div class="phone-nav-item active"><span>🏠</span>Заказы</div>
+              <div class="phone-nav-item"><span>📊</span>Статистика</div>
+              <div class="phone-nav-item"><span>👤</span>Профиль</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Courier stats -->
+        <div>
+          <div style="text-align:center;margin-bottom:10px;font-size:12px;color:var(--text2)">📊 Статистика курьера</div>
+          <div class="phone-frame">
+            <div class="phone-header">
+              <div style="font-size:14px;font-weight:700">Моя статистика</div>
+            </div>
+            <div class="phone-scroll">
+              <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                  <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center">
+                    <div style="font-size:26px;font-weight:700;color:var(--accent)">14</div>
+                    <div style="font-size:10px;color:var(--text2)">Сегодня</div>
+                  </div>
+                  <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center">
+                    <div style="font-size:26px;font-weight:700;color:var(--accent2)">87</div>
+                    <div style="font-size:10px;color:var(--text2)">Эта неделя</div>
+                  </div>
+                  <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center">
+                    <div style="font-size:26px;font-weight:700;color:var(--accent4)">36</div>
+                    <div style="font-size:10px;color:var(--text2)">Ср. мин</div>
+                  </div>
+                  <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center">
+                    <div style="font-size:26px;font-weight:700;color:var(--green)">98%</div>
+                    <div style="font-size:10px;color:var(--text2)">Успешных</div>
+                  </div>
+                </div>
+
+                <div style="background:var(--surface2);border-radius:10px;padding:12px">
+                  <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:10px">ДОСТАВКИ ЗА НЕДЕЛЮ</div>
+                  <canvas id="courier-chart" height="140"></canvas>
+                </div>
+
+                <div style="background:var(--surface2);border-radius:10px;padding:12px">
+                  <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:10px">ИСТОРИЯ СЕГОДНЯ</div>
+                  <div style="display:flex;flex-direction:column;gap:8px">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                      <div>
+                        <div style="font-size:12px;font-weight:600">#ORD-1040</div>
+                        <div style="font-size:10px;color:var(--text2)">ул. Толе би, 32 · 36 мин</div>
+                      </div>
+                      <span class="badge badge-green" style="font-size:10px">✓</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                      <div>
+                        <div style="font-size:12px;font-weight:600">#ORD-1038</div>
+                        <div style="font-size:10px;color:var(--text2)">мкр. Самал, 12 · 36 мин</div>
+                      </div>
+                      <span class="badge badge-green" style="font-size:10px">✓</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                      <div>
+                        <div style="font-size:12px;font-weight:600">#ORD-1036</div>
+                        <div style="font-size:10px;color:var(--text2)">пр. Достык, 44 · 42 мин</div>
+                      </div>
+                      <span class="badge badge-green" style="font-size:10px">✓</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="phone-nav">
+              <div class="phone-nav-item"><span>🏠</span>Заказы</div>
+              <div class="phone-nav-item active"><span>📊</span>Статистика</div>
+              <div class="phone-nav-item"><span>👤</span>Профиль</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<style>
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
+</style>
+
+<script>
+// ─────────────────────────── DATA
+const ORDERS = [
+  {id:'ORD-1042',client:'Айгерим Б.',items:3,amount:'7 400',type:'Доставка',pay:'Карта',status:'В пути',courier:'Курьер 1',time:'14:23'},
+  {id:'ORD-1043',client:'Марат С.',items:3,amount:'12 100',type:'Доставка',pay:'Kaspi',status:'Готовится',courier:'—',time:'14:31'},
+  {id:'ORD-1044',client:'Дина К.',items:2,amount:'5 900',type:'Доставка',pay:'Наличные',status:'Готовится',courier:'—',time:'14:38'},
+  {id:'ORD-1045',client:'Нурлан А.',items:4,amount:'9 200',type:'Самовывоз',pay:'Kaspi',status:'Подтверждён',courier:'—',time:'14:41'},
+  {id:'ORD-1046',client:'Зарина М.',items:1,amount:'6 700',type:'Доставка',pay:'Карта',status:'Создан',courier:'—',time:'14:47'},
+  {id:'ORD-1041',client:'Болат Е.',items:2,amount:'8 300',type:'Доставка',pay:'Наличные',status:'В пути',courier:'Курьер 2',time:'14:18'},
+  {id:'ORD-1040',client:'Алия Н.',items:3,amount:'7 100',type:'Доставка',pay:'Карта',status:'Доставлен',courier:'Курьер 1',time:'13:02'},
+  {id:'ORD-1039',client:'Сабина Т.',items:2,amount:'5 400',type:'Самовывоз',pay:'Kaspi',status:'Доставлен',courier:'Курьер 2',time:'12:45'},
+];
+
+const STATUS_BADGE = {
+  'Создан':'badge-gray','Подтверждён':'badge-purple','Готовится':'badge-orange',
+  'Забран':'badge-orange','В пути':'badge-blue','Доставлен':'badge-green','Отменён':'badge-red'
+};
+
+const MENU_ITEMS = [
+  {emoji:'🥣',name:'Овсяная каша с бананом',desc:'Тёплая мягкая каша, без жарки',price:'1 400',tags:['gentle_gi','gastritis'],type:'BREAKFAST'},
+  {emoji:'🍲',name:'Куриный суп с рисом',desc:'Лёгкий бульон, мягкие ингредиенты',price:'1 700',tags:['gentle_gi','гастрит'],type:'SOUP'},
+  {emoji:'🥩',name:'Паровые котлеты из индейки',desc:'Без жарки, мягкая текстура',price:'3 200',tags:['gentle_gi','без глютена'],type:'MAIN'},
+  {emoji:'🐟',name:'Запечённый хек + рис',desc:'Нежная рыба, без тяжёлых соусов',price:'3 400',tags:['рыба','low-fat'],type:'MAIN'},
+  {emoji:'🍳',name:'Омлет на пару с кабачком',desc:'Лёгкий белковый завтрак',price:'1 900',tags:['gentle_gi','ГЭРБ'],type:'BREAKFAST'},
+  {emoji:'🍎',name:'Запечённое яблоко с корицей',desc:'Мягкий десерт без сахара',price:'1 200',tags:['десерт','без сахара'],type:'DESSERT'},
+  {emoji:'🌾',name:'Гречка + индейка тушёная',desc:'Простой состав, нейтральный вкус',price:'3 000',tags:['гастрит','без глютена'],type:'MAIN'},
+  {emoji:'🥦',name:'Крем-суп из кабачка',desc:'Пюре-текстура, без острого',price:'1 600',tags:['gentle_gi','веган'],type:'SOUP'},
+  {emoji:'🍵',name:'Компот без сахара',desc:'Тёплый/холодный без добавленного сахара',price:'700',tags:['напиток','universal'],type:'DRINK'},
+  {emoji:'🫖',name:'Травяной чай',desc:'Ромашка/мята без кофеина',price:'600',tags:['ГЭРБ','лёгкое'],type:'DRINK'},
+  {emoji:'🍌',name:'Банан (перекус)',desc:'Простой перекус, мягкий для ЖКТ',price:'600',tags:['СРК','перекус'],type:'SNACK'},
+  {emoji:'🍐',name:'Запечённая груша (без сахара)',desc:'Лёгкий десерт, мягкая текстура',price:'1 200',tags:['поджелудочная','без сахара'],type:'DESSERT'},
+];
+
+const CATEGORIES = [
+  {emoji:'🟢',slug:'gentle_gi',title:'Щадящее для ЖКТ',desc:'Мягкие блюда без жарки и острого',color:'#4caf50',count:6},
+  {emoji:'💛',slug:'gastritis_friendly',title:'Гастрит-френдли',desc:'Без кислого, острого и тяжёлых соусов',color:'#ffd93d',count:8},
+  {emoji:'🔵',slug:'gerd_friendly',title:'ГЭРБ / изжога-френдли',desc:'Без томатов, цитрусов, кофе',color:'#2196f3',count:6},
+  {emoji:'🟣',slug:'ibs_low_trigger',title:'СРК: без триггеров',desc:'Без лука/чеснока, low-FODMAP-лайт',color:'#9c27b0',count:6},
+  {emoji:'🟠',slug:'pancreas_light',title:'Легко для поджелудочной',desc:'Низкая жирность, без жареного',color:'#ff9800',count:6},
+  {emoji:'🔴',slug:'low_fat_bile_liver',title:'Жёлчный/печень: low-fat',desc:'Запечённое, минимум жира',color:'#f44336',count:6},
+  {emoji:'🌿',slug:'constipation_gentle_fiber',title:'Запоры: мягкая клетчатка',desc:'Больше мягкой клетчатки',color:'#4ecdc4',count:6},
+  {emoji:'💧',slug:'recovery_diarrhea',title:'Восстановление после ЖКТ',desc:'Максимально простая еда',color:'#00bcd4',count:6},
+  {emoji:'🥛',slug:'lactose_free',title:'Без лактозы',desc:'Без молочных продуктов',color:'#e91e63',count:6},
+  {emoji:'🌾',slug:'gluten_free',title:'Без глютена',desc:'Подборка без глютена',color:'#795548',count:6},
+];
+
+// ─────────────────────────── RENDER
+function renderOrders() {
+  const tbody = document.getElementById('orders-table-body');
+  tbody.innerHTML = ORDERS.map(o => `
+    <tr>
+      <td><span class="order-id">#${o.id}</span></td>
+      <td>${o.client}</td>
+      <td>${o.items} поз.</td>
+      <td>${o.amount} ₸</td>
+      <td>${o.type}</td>
+      <td>${o.pay}</td>
+      <td><span class="badge ${STATUS_BADGE[o.status]||'badge-gray'}">${o.status}</span></td>
+      <td>${o.courier}</td>
+      <td>${o.time}</td>
+      <td><div class="actions"><button class="action-btn">👁</button><button class="action-btn">✏</button></div></td>
+    </tr>
+  `).join('');
+}
+
+function renderMenu() {
+  const grid = document.getElementById('menu-grid');
+  grid.innerHTML = MENU_ITEMS.map(item => `
+    <div class="menu-card">
+      <div class="menu-img">${item.emoji}</div>
+      <div class="menu-body">
+        <div class="menu-name">${item.name}</div>
+        <div class="menu-desc">${item.desc}</div>
+        <div class="menu-tags">${item.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+        <div class="menu-footer" style="margin-top:8px">
+          <div class="menu-price">${item.price} ₸</div>
+          <div style="display:flex;gap:6px">
+            <button class="action-btn" style="font-size:11px">✏</button>
+            <button class="action-btn" style="font-size:11px">🗑</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderCategories() {
+  const grid = document.getElementById('categories-grid');
+  grid.innerHTML = CATEGORIES.map(cat => `
+    <div class="card" style="border-left:3px solid ${cat.color}">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+        <span style="font-size:24px">${cat.emoji}</span>
+        <div>
+          <div style="font-size:14px;font-weight:700">${cat.title}</div>
+          <div style="font-size:11px;color:var(--text2)">${cat.desc}</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:var(--text2)">${cat.count} блюд</span>
+        <div style="display:flex;gap:6px">
+          <button class="action-btn" style="font-size:11px">Открыть</button>
+          <button class="action-btn" style="font-size:11px">✏</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderClientMenu() {
+  const container = document.getElementById('client-menu-items');
+  if (!container) return;
+  container.innerHTML = MENU_ITEMS.slice(0,6).map(item => `
+    <div style="display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:10px;padding:10px">
+      <span style="font-size:32px">${item.emoji}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.name}</div>
+        <div style="font-size:10px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.desc}</div>
+        <div style="font-size:13px;font-weight:700;color:var(--accent2);margin-top:3px">${item.price} ₸</div>
+      </div>
+      <button style="background:var(--accent);border:none;color:#fff;width:28px;height:28px;border-radius:8px;font-size:16px;cursor:pointer;flex-shrink:0">+</button>
+    </div>
+  `).join('');
+}
+
+// ─────────────────────────── CHARTS
+function initCharts() {
+  const defaults = { color: '#8b92b8', borderColor: 'rgba(139,146,184,.3)', gridColor: 'rgba(46,51,80,.8)' };
+
+  // Hourly
+  new Chart(document.getElementById('chart-hourly'), {
+    type: 'line',
+    data: {
+      labels: ['09','10','11','12','13','14','15','16','17','18'],
+      datasets: [{
+        label: 'Заказы',
+        data: [2,5,8,12,9,11,7,8,4,2],
+        borderColor: '#6c63ff',
+        backgroundColor: 'rgba(108,99,255,.12)',
+        fill: true, tension: .4, pointRadius: 4,
+        pointBackgroundColor: '#6c63ff'
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: defaults.gridColor }, ticks: { color: defaults.color } },
+        y: { grid: { color: defaults.gridColor }, ticks: { color: defaults.color, stepSize: 3 } }
+      }
+    }
+  });
+
+  // Status donut
+  new Chart(document.getElementById('chart-status'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Создан','Подтверждён','Готовится','Забран','В пути','Доставлен'],
+      datasets: [{
+        data: [5,3,6,2,4,27],
+        backgroundColor: ['#6c63ff','#4ecdc4','#ffd93d','#ff9800','#2196f3','#4caf50'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      cutout: '65%',
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  // Revenue
+  new Chart(document.getElementById('chart-revenue'), {
+    type: 'bar',
+    data: {
+      labels: ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'],
+      datasets: [{
+        label: 'Выручка',
+        data: [89,104,98,115,121,143,126],
+        backgroundColor: 'rgba(108,99,255,.7)',
+        borderRadius: 6, borderSkipped: false
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: defaults.gridColor }, ticks: { color: defaults.color } },
+        y: { grid: { color: defaults.gridColor }, ticks: { color: defaults.color, callback: v => v+'к' } }
+      }
+    }
+  });
+
+  // Top dishes
+  new Chart(document.getElementById('chart-dishes'), {
+    type: 'bar',
+    data: {
+      labels: ['Куриный суп','Гречка+индейка','Овсяная каша','Омлет на пару','Компот','Хек+рис'],
+      datasets: [{
+        data: [42,38,35,29,24,21],
+        backgroundColor: ['#6c63ff','#4ecdc4','#ffd93d','#ff6b6b','#ff9800','#4caf50'],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: defaults.gridColor }, ticks: { color: defaults.color } },
+        y: { grid: { display: false }, ticks: { color: defaults.color, font: { size: 10 } } }
+      }
+    }
+  });
+
+  // Payment
+  new Chart(document.getElementById('chart-payment'), {
+    type: 'pie',
+    data: {
+      labels: ['Kaspi','Наличные','Карта'],
+      datasets: [{
+        data: [22,15,10],
+        backgroundColor: ['#ff9800','#4caf50','#2196f3'],
+        borderWidth: 0
+      }]
+    },
+    options: { plugins: { legend: { labels: { color: '#8b92b8', font: { size: 11 } } } } }
+  });
+
+  // Delivery type
+  new Chart(document.getElementById('chart-delivery-type'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Доставка','Самовывоз'],
+      datasets: [{ data: [38,9], backgroundColor: ['#6c63ff','#4ecdc4'], borderWidth: 0 }]
+    },
+    options: { cutout: '60%', plugins: { legend: { labels: { color: '#8b92b8', font: { size: 11 } } } } }
+  });
+
+  // Courier week chart
+  new Chart(document.getElementById('courier-chart'), {
+    type: 'bar',
+    data: {
+      labels: ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'],
+      datasets: [{
+        data: [11,14,13,16,15,18,14],
+        backgroundColor: 'rgba(108,99,255,.7)', borderRadius: 4
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(46,51,80,.6)' }, ticks: { color: '#8b92b8', font: { size: 9 } } },
+        y: { grid: { color: 'rgba(46,51,80,.6)' }, ticks: { color: '#8b92b8', font: { size: 9 } } }
+      }
+    }
+  });
+}
+
+// ─────────────────────────── MAP (Leaflet)
+let mainMapInit = false;
+let courierMapInit = false;
+const REST = [43.238949, 76.889709];
+
+const DARK_TILES = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+const TILE_ATTR = '&copy; <a href="https://carto.com/">CARTO</a>';
+
+function initMainMap() {
+  if (mainMapInit) return;
+  mainMapInit = true;
+
+  const map = L.map('map', { zoomControl: true }).setView(REST, 13);
+  L.tileLayer(DARK_TILES, { attribution: TILE_ATTR, maxZoom: 19 }).addTo(map);
+
+  const mkIcon = (color, emoji) => L.divIcon({
+    html: `<div style="background:${color};width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.5)">${emoji}</div>`,
+    iconSize: [36,36], iconAnchor: [18,18], className: ''
+  });
+
+  // Restaurant
+  L.marker(REST, {icon: mkIcon('#6c63ff','🥗')}).addTo(map).bindPopup('<b>Paidaly Restaurant</b><br>43.238949, 76.889709');
+
+  // Courier 1 (moving towards delivery)
+  const c1 = [43.244, 76.897];
+  L.marker(c1, {icon: mkIcon('#4caf50','🛵')}).addTo(map).bindPopup('<b>Курьер 1</b><br>Доставляет #ORD-1042');
+  L.polyline([c1, [43.247, 76.905]], {color:'#4caf50', weight:3, dashArray:'6,6'}).addTo(map);
+
+  // Courier 2
+  const c2 = [43.231, 76.878];
+  L.marker(c2, {icon: mkIcon('#4ecdc4','🛵')}).addTo(map).bindPopup('<b>Курьер 2</b><br>Доставляет #ORD-1041');
+  L.polyline([c2, [43.225, 76.871]], {color:'#4ecdc4', weight:3, dashArray:'6,6'}).addTo(map);
+
+  // Active deliveries destinations
+  L.marker([43.247, 76.905], {icon: mkIcon('#2196f3','📍')}).addTo(map).bindPopup('#ORD-1042 · пр. Абая, 14');
+  L.marker([43.225, 76.871], {icon: mkIcon('#2196f3','📍')}).addTo(map).bindPopup('#ORD-1041 · ул. Сейфуллина, 55');
+
+  // Pending orders
+  L.marker([43.252, 76.882], {icon: mkIcon('#ff9800','🍴')}).addTo(map).bindPopup('#ORD-1043 · Готовится');
+  L.marker([43.235, 76.912], {icon: mkIcon('#ff9800','🍴')}).addTo(map).bindPopup('#ORD-1044 · Готовится');
+
+  // Free delivery circle (4 km)
+  L.circle(REST, {radius:4000, color:'#4caf50', weight:1, fillColor:'#4caf50', fillOpacity:.05}).addTo(map);
+}
+
+function initCourierMap() {
+  if (courierMapInit) return;
+  courierMapInit = true;
+
+  const map = L.map('courier-map', { zoomControl: false }).setView([43.242, 76.900], 14);
+  L.tileLayer(DARK_TILES, { attribution: TILE_ATTR, maxZoom: 19 }).addTo(map);
+
+  const mkIcon = (color, emoji) => L.divIcon({
+    html: `<div style="background:${color};width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.5)">${emoji}</div>`,
+    iconSize: [32,32], iconAnchor: [16,16], className: ''
+  });
+
+  L.marker(REST, {icon: mkIcon('#6c63ff','🥗')}).addTo(map);
+  L.marker([43.244, 76.897], {icon: mkIcon('#4caf50','🛵')}).addTo(map).bindPopup('Вы здесь');
+  L.marker([43.247, 76.905], {icon: mkIcon('#f44336','📍')}).addTo(map).bindPopup('Доставить сюда');
+  L.polyline([[43.244, 76.897],[43.246,76.901],[43.247,76.905]], {color:'#4caf50',weight:3}).addTo(map);
+}
+
+// ─────────────────────────── NAV
+const TITLES = {
+  dashboard:'Дашборд', orders:'Заказы', couriers:'Курьеры', map:'Карта доставок',
+  menu:'Меню', categories:'Категории', client:'Приложение клиента', 'courier-app':'Приложение курьера'
+};
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') === `showScreen('${name}')`) n.classList.add('active');
+  });
+  document.getElementById('topbar-title').textContent = TITLES[name] || name;
+
+  if (name === 'map') setTimeout(initMainMap, 100);
+  if (name === 'courier-app') setTimeout(initCourierMap, 100);
+}
+
+// ─────────────────────────── INIT
+document.addEventListener('DOMContentLoaded', () => {
+  renderOrders();
+  renderMenu();
+  renderCategories();
+  renderClientMenu();
+  initCharts();
+});
+</script>
+</body>
+</html>
