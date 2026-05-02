@@ -218,69 +218,17 @@ function MobileTabBar() {
   );
 }
 
-/* ── Courier shell: old design tokens ────────────────────── */
-const OLD_COURIER_VARS = {
-  '--bg':           '#f0f6f0',
-  '--surface':      '#ffffff',
-  '--surface-2':    '#f5faf5',
-  '--border':       '#d0e8d0',
-  '--border-focus': '#2d6a3a',
-  '--text':         '#1a2e1a',
-  '--text-muted':   '#4a6e4a',
-  '--text-subtle':  '#7a9e7a',
-  '--accent':       '#2d6a3a',
-  '--accent-hover': '#1e5228',
-  '--accent-bg':    'rgba(45,106,58,.12)',
-  '--accent2':      '#6fc576',
-  '--accent3':      '#ff6b6b',
-  '--accent4':      '#ffd93d',
-  '--danger':       '#e53935',
-  '--danger-bg':    'rgba(229,57,53,.12)',
-  '--green':        '#43a047',
-  '--ink':          '#1a2e1a',
-  '--muted':        '#4a6e4a',
-  '--line':         '#d0e8d0',
-  '--lime':         '#6fc576',
-  '--header-bg':    '#1a3520',
-  '--header-text':  '#ffffff',
-  '--radius-sm':    '8px',
-  '--radius':       '12px',
-  '--radius-lg':    '18px',
-  '--radius-pill':  '999px',
-  '--shadow-sm':    '0 1px 3px rgba(0,50,0,.08), 0 1px 2px rgba(0,50,0,.05)',
-  '--shadow':       '0 4px 16px rgba(0,50,0,.10), 0 1px 4px rgba(0,50,0,.06)',
-  '--shadow-lg':    '0 12px 32px rgba(0,50,0,.14), 0 2px 8px rgba(0,50,0,.08)',
-  '--font':         'Inter, Segoe UI, system-ui, sans-serif',
-  '--font-title':   'Inter, Segoe UI, system-ui, sans-serif',
-  '--grad':         'linear-gradient(135deg, #2d6a3a 0%, #6fc576 100%)',
-} as React.CSSProperties;
 
 function CourierShell({ children }: { children: JSX.Element }) {
-  const logout = useAuthStore((s) => s.logout);
-
   return (
-    <div style={{ ...OLD_COURIER_VARS, fontFamily: 'Inter, Segoe UI, system-ui, sans-serif', minHeight: '100vh', background: '#f0f6f0' }}>
-      <div className="app-shell">
-        <header style={{ background: '#1a3520', borderBottom: '1px solid rgba(255,255,255,.12)', marginBottom: 32 }}>
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-            <div style={{ width: 28, height: 28, background: 'rgba(111,197,118,.25)', borderRadius: 8, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🌿</div>
-            <h1 style={{ color: '#fff', fontSize: 17, fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>paidaly</h1>
-          </Link>
-          <nav>
-            <Link to="/courier" style={{ color: 'rgba(255,255,255,.75)', fontSize: 14, fontWeight: 500, padding: '6px 12px', borderRadius: 999, textDecoration: 'none' }}>Доставки</Link>
-            <button className="link-button" onClick={logout} style={{ fontFamily: 'Inter, sans-serif' }}>Выйти</button>
-          </nav>
-        </header>
-        <main>{children}</main>
-      </div>
+    <div style={{ background: '#0E1814', minHeight: '100vh', fontFamily: 'Inter, Segoe UI, system-ui, sans-serif' }}>
+      {children}
       <ToastHost />
     </div>
   );
 }
 
 /* ── App ─────────────────────────────────────────────────── */
-import React from 'react';
-
 export default function App() {
   const fetchMe = useAuthStore((s) => s.fetchMe);
   const token = useAuthStore((s) => s.token);
