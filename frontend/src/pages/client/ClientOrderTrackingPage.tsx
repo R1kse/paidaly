@@ -68,9 +68,16 @@ export default function ClientOrderTrackingPage() {
       ? [order.addressLat, order.addressLng]
       : null;
 
-  // Маршрут: от курьера (или ресторана) до адреса клиента
-  const routeFrom = courierPos ?? restaurantPos;
-  const route = useRoute(routeFrom, deliveryPos);
+  // ETA = курьер→ресторан + ресторан→клиент (пока не забрал), курьер→клиент (после)
+  const pickedUp = ['PICKED_UP', 'ON_THE_WAY', 'DELIVERED', 'CANCELED'].includes(order?.status ?? '');
+  const legToRestaurant = useRoute(courierPos, restaurantPos);
+  const legToClient = useRoute(
+    pickedUp ? (courierPos ?? restaurantPos) : restaurantPos,
+    deliveryPos,
+  );
+  const etaDuration: number | null = !legToClient ? null
+    : (!pickedUp && legToRestaurant) ? legToRestaurant.durationMin + legToClient.durationMin
+    : legToClient.durationMin;
 
   const center: [number, number] = useMemo(() => {
     if (deliveryPos) return deliveryPos;
@@ -116,10 +123,10 @@ export default function ClientOrderTrackingPage() {
               {STATUS_LABEL[order.status] ?? order.status}
             </span>
           </div>
-          {route && isActive && (
+          {etaDuration !== null && isActive && (
             <div className="eta-block">
-              <div className="eta-value">{formatEta(route.durationMin)}</div>
-              <div className="eta-label">до доставки · {route.distanceKm} км</div>
+              <div className="eta-value">{formatEta(etaDuration)}</div>
+              <div className="eta-label">до доставки · {legToClient?.distanceKm} км</div>
             </div>
           )}
         </div>
@@ -180,7 +187,8 @@ export default function ClientOrderTrackingPage() {
               subdomains='abcd'
               maxZoom={20}
             />
-            {route && <RouteLine coords={route.coords} />}
+            {legToRestaurant && !pickedUp && courierPos && <RouteLine coords={legToRestaurant.coords} color="#f59e0b" />}
+            {legToClient && <RouteLine coords={legToClient.coords} />}
             {restaurantPos && <Marker position={restaurantPos} icon={restaurantIcon} />}
             {deliveryPos && <Marker position={deliveryPos} icon={addressIcon} />}
             {courierPos && <Marker position={courierPos} icon={courierIcon} />}
