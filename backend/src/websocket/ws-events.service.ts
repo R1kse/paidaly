@@ -38,6 +38,16 @@ export class WsEventsService {
     }
   }
 
+  emitChatMessage(payload: {
+    orderId: string;
+    message: { id: string; text: string; createdAt: Date; sender: { id: string; name: string; role: string } };
+  }) {
+    if (!this.server) return;
+    const data = { ...payload.message, orderId: payload.orderId };
+    this.server.to(`order:${payload.orderId}`).emit('chat.message', data);
+    this.server.to('dispatchers').emit('chat.message', data);
+  }
+
   emitCourierLocationUpdated(payload: {
     courierId: string;
     lat: number;

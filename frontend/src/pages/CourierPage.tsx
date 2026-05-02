@@ -4,6 +4,7 @@ import { MapContainer, Marker, TileLayer } from 'react-leaflet';
 import { courierIcon, addressIcon, restaurantIcon } from '../map/markers';
 import { RouteLine } from '../map/RouteLine';
 import { useRoute, formatEta } from '../map/useRoute';
+import ChatPanel from '../components/ChatPanel';
 import { api } from '../api/client';
 import { useAuthStore } from '../store/auth';
 import { getSocket } from '../ws/socket';
@@ -178,6 +179,7 @@ function DetailView({ delivery, onBack, onStatusChange }: {
   const order = delivery.order;
   const act = nextAction(order.status);
   const initials = (order.client?.name ?? 'КЛ').split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+  const [showChat, setShowChat] = useState(false);
 
   return (
     <div style={{ height: '100%', overflowY: 'auto', paddingBottom: 140 }}>
@@ -259,6 +261,22 @@ function DetailView({ delivery, onBack, onStatusChange }: {
         </div>
       </div>
 
+      {/* Chat section */}
+      <div style={{ padding: '10px 20px 160px' }}>
+        <button
+          onClick={() => setShowChat(v => !v)}
+          style={{ width: '100%', padding: '12px 16px', border: `1px solid ${BORD}`, borderRadius: 14, background: CARD, color: TEXT, fontWeight: 700, fontSize: 13, fontFamily: 'Nunito,sans-serif', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+        >
+          <span>💬 Чат с диспетчером</span>
+          <span style={{ color: MUTED, fontSize: 18, lineHeight: 1 }}>{showChat ? '▲' : '▼'}</span>
+        </button>
+        {showChat && (
+          <div style={{ marginTop: 8, borderRadius: 16, overflow: 'hidden', border: `1px solid ${BORD}`, height: 320 }}>
+            <ChatPanel orderId={order.id} dark />
+          </div>
+        )}
+      </div>
+
       {/* Fixed action bar */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 20px 24px', background: `linear-gradient(to top,${BG} 70%,transparent)`, zIndex: 200 }}>
         {act && (
@@ -269,9 +287,6 @@ function DetailView({ delivery, onBack, onStatusChange }: {
             {act.label}
           </button>
         )}
-        <button style={{ width: '100%', padding: 12, border: `1px solid rgba(255,255,255,0.1)`, borderRadius: 14, background: 'transparent', color: MUTED, fontWeight: 700, fontSize: 13, fontFamily: 'Nunito,sans-serif', cursor: 'pointer' }}>
-          Связаться с диспетчером
-        </button>
       </div>
     </div>
   );

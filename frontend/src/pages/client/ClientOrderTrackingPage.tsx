@@ -4,6 +4,7 @@ import { MapContainer, Marker, TileLayer } from 'react-leaflet';
 import { restaurantIcon, addressIcon, courierIcon } from '../../map/markers';
 import { RouteLine } from '../../map/RouteLine';
 import { useRoute, formatEta } from '../../map/useRoute';
+import ChatPanel from '../../components/ChatPanel';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import { useAuthStore } from '../../store/auth';
@@ -199,6 +200,16 @@ export default function ClientOrderTrackingPage() {
             Ожидаем геолокацию курьера...
           </p>
         )}
+      </div>
+
+      {/* Chat */}
+      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div style={{ padding: '14px 20px 12px', borderBottom: '1.5px solid var(--line)', fontWeight: 800, fontSize: 15 }}>
+          💬 Чат с рестораном
+        </div>
+        <div style={{ height: 320 }}>
+          <ChatPanel orderId={orderId!} />
+        </div>
       </div>
     </div>
   );

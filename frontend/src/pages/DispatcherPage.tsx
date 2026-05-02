@@ -13,6 +13,7 @@ import { restaurantIcon, courierIcon, addressIcon } from '../map/markers';
 import { api } from '../api/client';
 import { useAuthStore } from '../store/auth';
 import { getSocket } from '../ws/socket';
+import ChatPanel from '../components/ChatPanel';
 import NotificationsToggle from '../components/NotificationsToggle';
 
 ChartJS.register(
@@ -444,6 +445,7 @@ interface OrdersTabProps {
 
 function OrdersTab({ orders, couriers, statusFilter, onStatusFilter, onSetStatus, onAssign, onUnassign }: OrdersTabProps) {
   const [search, setSearch] = useState('');
+  const [chatOrderId, setChatOrderId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     let list = orders ?? [];
@@ -577,6 +579,7 @@ function OrdersTab({ orders, couriers, statusFilter, onStatusFilter, onSetStatus
                       {!['DELIVERED', 'CANCELED'].includes(order.status) && (
                         <button className="sm danger" onClick={() => onSetStatus(order.id, 'CANCELED')}>✕</button>
                       )}
+                      <button className="sm" onClick={() => setChatOrderId(id => id === order.id ? null : order.id)} title="Чат">💬</button>
                     </div>
                   </td>
                 </tr>
@@ -585,6 +588,26 @@ function OrdersTab({ orders, couriers, statusFilter, onStatusFilter, onSetStatus
           </table>
         </div>
       </div>
+
+      {/* Chat drawer */}
+      {chatOrderId && (
+        <div style={{
+          position: 'fixed', right: 0, top: 0, bottom: 0, width: 360,
+          background: '#fff', boxShadow: '-4px 0 24px rgba(27,58,45,0.12)',
+          borderLeft: '1.5px solid var(--line)', display: 'flex', flexDirection: 'column', zIndex: 300,
+        }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1.5px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--ink)' }}>💬 Чат по заказу</div>
+              <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>#{chatOrderId.slice(-6).toUpperCase()}</div>
+            </div>
+            <button onClick={() => setChatOrderId(null)} style={{ width: 32, height: 32, borderRadius: 8, border: '1.5px solid var(--line)', background: 'var(--bg-tint)', cursor: 'pointer', fontSize: 16, display: 'grid', placeItems: 'center' }}>✕</button>
+          </div>
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <ChatPanel orderId={chatOrderId} />
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -72,6 +72,7 @@ model User {
   pushSubscriptions PushSubscription[]
   savedAddresses    SavedAddress[]
   auditLogs         AuditLog[]        @relation("AuditActor")
+  sentMessages      ChatMessage[]     @relation("SentMessages")
 }
 
 enum AuditAction {
@@ -201,9 +202,22 @@ model Order {
   orderItems        OrderItem[]
   payment           Payment?
   delivery          Delivery?
+  chatMessages      ChatMessage[]
 
   @@index([status])
   @@index([clientId])
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  orderId   String
+  senderId  String
+  text      String
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  sender    User     @relation("SentMessages", fields: [senderId], references: [id])
+
+  @@index([orderId, createdAt])
 }
 
 model OrderItem {

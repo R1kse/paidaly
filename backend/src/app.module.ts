@@ -12,6 +12,7 @@ import { WebsocketModule } from './websocket/websocket.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ProfileModule } from './profile/profile.module';
 import { AuditModule } from './audit/audit.module';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { AuditModule } from './audit/audit.module';
     NotificationsModule,
     ProfileModule,
     AuditModule,
+    MessagesModule,
   ],
   controllers: [AppController],
   providers: [AppGateway],
