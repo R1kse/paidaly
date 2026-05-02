@@ -609,7 +609,7 @@ export default function CourierPage() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: BG, fontFamily: 'Nunito,sans-serif', color: TEXT, overflow: 'hidden' }}>
 
       {/* ── Content area ── */}
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0, paddingTop: 'env(safe-area-inset-top)' }}>
 
         {/* Detail view overlays orders tab */}
         {selectedDelivery ? (

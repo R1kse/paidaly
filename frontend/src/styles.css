@@ -90,7 +90,8 @@ header {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  height: 64px;
+  height: calc(64px + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
   border-bottom: 1px solid rgba(255,255,255,.1);
   position: sticky;
   top: 0;
@@ -99,7 +100,8 @@ header {
   -webkit-backdrop-filter: blur(12px);
   z-index: 100;
   margin-bottom: 32px;
-  padding: 0 24px;
+  padding-left: 24px;
+  padding-right: 24px;
 }
 
 header h1 {
@@ -1665,7 +1667,7 @@ hr {
   background: radial-gradient(ellipse at 20% 10%, #D4E9C4 0%, transparent 50%),
               radial-gradient(ellipse at 90% 0%, #E4F0D0 0%, transparent 45%),
               var(--bg);
-  padding: 24px;
+  padding: max(24px, calc(env(safe-area-inset-top) + 16px)) 24px 24px;
 }
 
 .auth-card {

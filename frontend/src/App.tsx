@@ -80,9 +80,10 @@ function ClientShell({ children }: { children: JSX.Element }) {
         position: 'sticky', top: 0, zIndex: 100,
         background: '#fff',
         borderBottom: '1.5px solid #E3ECE1',
-        height: 60,
+        height: 'calc(60px + env(safe-area-inset-top))',
+        paddingTop: 'env(safe-area-inset-top)',
         display: 'flex', alignItems: 'center',
-        padding: '0 24px', gap: 0,
+        paddingLeft: 24, paddingRight: 24, gap: 0,
       }}>
         {/* Logo */}
         <Link to="/client" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', marginRight: 28, flexShrink: 0 }}>
