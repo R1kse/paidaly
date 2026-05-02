@@ -1913,6 +1913,9 @@ hr {
 /* ── Mobile cart sticky button (hidden by default) ── */
 .menu-mobile-cart { display: none; }
 
+/* ── Mobile CTA bar: фиксированная кнопка действия над таббаром ── */
+.mobile-cta-bar { display: block; /* десктоп — обычный поток */ }
+
 /* ════════════════════════════════════════════════════════════
    @media (max-width: 768px) — all mobile overrides
    ════════════════════════════════════════════════════════════ */
@@ -1969,6 +1972,29 @@ hr {
 
   /* ── ClientCheckoutPage ── */
   .checkout { grid-template-columns: 1fr !important; }
+
+  /* ── Фиксированная CTA-кнопка на мобиле ── */
+  .mobile-cta-bar {
+    position: fixed;
+    bottom: calc(56px + env(safe-area-inset-bottom));
+    left: 0;
+    right: 0;
+    padding: 12px 16px;
+    background: rgba(247,250,245,0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1.5px solid var(--line);
+    z-index: 150;
+  }
+
+  .mobile-cta-bar button {
+    width: 100%;
+  }
+
+  /* доп. отступ внизу страниц с фикс. кнопкой */
+  .has-mobile-cta {
+    padding-bottom: calc(80px + 56px + env(safe-area-inset-bottom)) !important;
+  }
 
   /* ── Map height on mobile ── */
   .map { height: 240px; }

@@ -156,7 +156,7 @@ export default function ClientCheckoutPage() {
 
   return (
     <div className="checkout">
-      <div style={{ display: 'grid', gap: 16 }}>
+      <div className="has-mobile-cta" style={{ display: 'grid', gap: 16 }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link to="/client/menu" style={{
@@ -376,13 +376,16 @@ export default function ClientCheckoutPage() {
           </div>
         )}
 
-        <button
-          className="primary"
-          onClick={handleCreate}
-          style={{ width: '100%', padding: '15px', fontWeight: 800, fontSize: 15, borderRadius: 16 }}
-        >
-          Оплатить и заказать — {totalPrice + deliveryFee} ₸
-        </button>
+        {/* На мобиле — фиксируется внизу; на десктопе — в потоке */}
+        <div className="mobile-cta-bar">
+          <button
+            className="primary"
+            onClick={handleCreate}
+            style={{ width: '100%', padding: '15px', fontWeight: 800, fontSize: 15, borderRadius: 16 }}
+          >
+            Оплатить и заказать — {totalPrice + deliveryFee} ₸
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gap: 16 }}>
