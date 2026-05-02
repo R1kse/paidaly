@@ -221,6 +221,23 @@ function MobileTabBar() {
 
 
 function CourierShell({ children }: { children: JSX.Element }) {
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    const prevHtml = html.style.background;
+    const prevBody = body.style.background;
+    const prevTheme = meta?.content ?? '';
+    html.style.background = '#0E1814';
+    body.style.background = '#0E1814';
+    if (meta) meta.content = '#0E1814';
+    return () => {
+      html.style.background = prevHtml;
+      body.style.background = prevBody;
+      if (meta) meta.content = prevTheme;
+    };
+  }, []);
+
   return (
     <div style={{ background: '#0E1814', minHeight: '100vh', fontFamily: 'Inter, Segoe UI, system-ui, sans-serif' }}>
       {children}
