@@ -316,13 +316,19 @@ export class OrdersService {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
       include: {
+        client: { select: { id: true, name: true, email: true, phone: true } },
         orderItems: {
           include: {
+            menuItem: { select: { id: true, title: true } },
             modifiers: true,
           },
         },
         payment: true,
-        delivery: true,
+        delivery: {
+          include: {
+            courier: { select: { id: true, name: true, email: true, phone: true } },
+          },
+        },
       },
     });
 

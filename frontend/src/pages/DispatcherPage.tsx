@@ -445,7 +445,14 @@ interface OrdersTabProps {
 
 function OrdersTab({ orders, couriers, statusFilter, onStatusFilter, onSetStatus, onAssign, onUnassign }: OrdersTabProps) {
   const [search, setSearch] = useState('');
-  const [chatOrderId, setChatOrderId] = useState<string | null>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [detailTab, setDetailTab] = useState<'details' | 'chat'>('details');
+
+  const { data: selectedOrder } = useQuery({
+    queryKey: ['order', selectedOrderId],
+    queryFn: async () => (await api.get(`/orders/${selectedOrderId}`)).data,
+    enabled: !!selectedOrderId,
+  });
 
   const filtered = useMemo(() => {
     let list = orders ?? [];
@@ -537,7 +544,11 @@ function OrdersTab({ orders, couriers, statusFilter, onStatusFilter, onSetStatus
                 </tr>
               )}
               {filtered.map((order: any) => (
-                <tr key={order.id}>
+                <tr
+                  key={order.id}
+                  onClick={() => { setSelectedOrderId(order.id); setDetailTab('details'); }}
+                  style={{ cursor: 'pointer' }}
+                >
                   <td><span className="order-id-cell">#{order.id.slice(-6)}</span></td>
                   <td style={{ fontSize: 12 }}>{order.client?.name ?? '—'}</td>
                   <td style={{ fontSize: 12, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -568,7 +579,7 @@ function OrdersTab({ orders, couriers, statusFilter, onStatusFilter, onSetStatus
                   <td style={{ color: 'var(--text-muted)', fontSize: 12, whiteSpace: 'nowrap' }}>
                     {new Date(order.createdAt).toLocaleString('ru', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                   </td>
-                  <td>
+                  <td onClick={(e) => e.stopPropagation()}>
                     <div style={{ display: 'flex', gap: 4 }}>
                       {order.status === 'CREATED' && (
                         <button className="sm primary" onClick={() => onSetStatus(order.id, 'CONFIRMED')}>Подтвердить</button>
@@ -579,7 +590,7 @@ function OrdersTab({ orders, couriers, statusFilter, onStatusFilter, onSetStatus
                       {!['DELIVERED', 'CANCELED'].includes(order.status) && (
                         <button className="sm danger" onClick={() => onSetStatus(order.id, 'CANCELED')}>✕</button>
                       )}
-                      <button className="sm" onClick={() => setChatOrderId(id => id === order.id ? null : order.id)} title="Чат">💬</button>
+                      <button className="sm" onClick={() => { setSelectedOrderId(order.id); setDetailTab('chat'); }} title="Чат">💬</button>
                     </div>
                   </td>
                 </tr>
@@ -589,22 +600,112 @@ function OrdersTab({ orders, couriers, statusFilter, onStatusFilter, onSetStatus
         </div>
       </div>
 
-      {/* Chat drawer */}
-      {chatOrderId && (
+      {/* Order detail drawer */}
+      {selectedOrderId && (
         <div style={{
-          position: 'fixed', right: 0, top: 0, bottom: 0, width: 360,
+          position: 'fixed', right: 0, top: 0, bottom: 0, width: 420,
           background: '#fff', boxShadow: '-4px 0 24px rgba(27,58,45,0.12)',
           borderLeft: '1.5px solid var(--line)', display: 'flex', flexDirection: 'column', zIndex: 300,
         }}>
+          {/* Header */}
           <div style={{ padding: '16px 20px', borderBottom: '1.5px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
             <div>
-              <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--ink)' }}>💬 Чат по заказу</div>
-              <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>#{chatOrderId.slice(-6).toUpperCase()}</div>
+              <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--ink)' }}>Заказ #{selectedOrderId.slice(-6).toUpperCase()}</div>
+              {selectedOrder && <div style={{ marginTop: 4 }}><StatusBadge status={selectedOrder.status} /></div>}
             </div>
-            <button onClick={() => setChatOrderId(null)} style={{ width: 32, height: 32, borderRadius: 8, border: '1.5px solid var(--line)', background: 'var(--bg-tint)', cursor: 'pointer', fontSize: 16, display: 'grid', placeItems: 'center' }}>✕</button>
+            <button onClick={() => setSelectedOrderId(null)} style={{ width: 32, height: 32, borderRadius: 8, border: '1.5px solid var(--line)', background: 'var(--bg-tint)', cursor: 'pointer', fontSize: 16, display: 'grid', placeItems: 'center' }}>✕</button>
           </div>
-          <div style={{ flex: 1, minHeight: 0 }}>
-            <ChatPanel orderId={chatOrderId} />
+
+          {/* Tabs */}
+          <div style={{ display: 'flex', borderBottom: '1.5px solid var(--line)', flexShrink: 0 }}>
+            {(['details', 'chat'] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setDetailTab(t)}
+                style={{
+                  flex: 1, padding: '10px 0', background: 'none', border: 'none', cursor: 'pointer',
+                  fontWeight: 800, fontSize: 13,
+                  color: detailTab === t ? 'var(--green)' : 'var(--muted)',
+                  borderBottom: detailTab === t ? '2px solid var(--green)' : '2px solid transparent',
+                  marginBottom: -1.5,
+                }}
+              >
+                {t === 'details' ? '📋 Детали' : '💬 Чат'}
+              </button>
+            ))}
+          </div>
+
+          {/* Content */}
+          <div style={{ flex: 1, minHeight: 0, overflowY: detailTab === 'details' ? 'auto' : 'hidden', display: 'flex', flexDirection: 'column' }}>
+            {detailTab === 'details' && selectedOrder && (
+              <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {/* Client */}
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 6 }}>Клиент</div>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>{selectedOrder.client?.name ?? '—'}</div>
+                  <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{selectedOrder.client?.phone ?? selectedOrder.client?.email ?? ''}</div>
+                </div>
+
+                {/* Address */}
+                {selectedOrder.addressText && (
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 6 }}>Адрес доставки</div>
+                    <div style={{ fontWeight: 600, fontSize: 13 }}>{selectedOrder.addressText}</div>
+                  </div>
+                )}
+
+                {/* Courier */}
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 6 }}>Курьер</div>
+                  {selectedOrder.delivery?.courier ? (
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 14 }}>{selectedOrder.delivery.courier.name}</div>
+                      <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{selectedOrder.delivery.courier.phone ?? selectedOrder.delivery.courier.email ?? ''}</div>
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 600 }}>Не назначен</div>
+                  )}
+                </div>
+
+                {/* Items */}
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 8 }}>Состав заказа</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {(selectedOrder.orderItems ?? []).map((item: any) => (
+                      <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'var(--bg-tint)', borderRadius: 10 }}>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: 13 }}>{item.menuItem?.title ?? item.titleSnapshot ?? '—'}</div>
+                          {item.comment && <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>{item.comment}</div>}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600 }}>×{item.quantity}</span>
+                          <span style={{ fontWeight: 800, fontSize: 13, color: 'var(--green)' }}>{fmtMoney(item.unitPrice * item.quantity)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Total */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: '#F7FAF5', borderRadius: 12, border: '1.5px solid var(--line)' }}>
+                  <span style={{ fontWeight: 800, fontSize: 14 }}>Итого</span>
+                  <span style={{ fontWeight: 900, fontSize: 18, color: 'var(--green)' }}>{fmtMoney(selectedOrder.totalAmount)}</span>
+                </div>
+
+                {/* Payment */}
+                <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600 }}>
+                  Оплата: {selectedOrder.payment?.method ?? '—'} · Создан: {new Date(selectedOrder.createdAt).toLocaleString('ru')}
+                </div>
+              </div>
+            )}
+            {detailTab === 'details' && !selectedOrder && (
+              <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Загрузка...</div>
+            )}
+            {detailTab === 'chat' && (
+              <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                <ChatPanel orderId={selectedOrderId} />
+              </div>
+            )}
           </div>
         </div>
       )}
