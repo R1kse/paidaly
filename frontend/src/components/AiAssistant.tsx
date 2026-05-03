@@ -31,8 +31,14 @@ export default function AiAssistant() {
     try {
       const { data } = await api.post('/ai/chat', { history: newHistory });
       setHistory([...newHistory, { role: 'assistant', content: data.reply }]);
-    } catch {
-      setHistory([...newHistory, { role: 'assistant', content: 'Извините, произошла ошибка. Попробуйте ещё раз.' }]);
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const errMsg = status === 500
+        ? 'Ошибка сервера. Проверьте, что ANTHROPIC_API_KEY установлен в Railway.'
+        : status === 401
+        ? 'Необходима авторизация. Попробуйте перезайти.'
+        : 'Не удалось получить ответ. Проверьте соединение.';
+      setHistory([...newHistory, { role: 'assistant', content: errMsg }]);
     } finally {
       setLoading(false);
     }

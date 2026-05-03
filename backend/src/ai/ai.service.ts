@@ -13,9 +13,14 @@ export interface MealPlanRequest {
 
 @Injectable()
 export class AiService {
-  private client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  private client: Anthropic;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {
+    if (!process.env.ANTHROPIC_API_KEY) {
+      console.warn('[AiService] ANTHROPIC_API_KEY is not set — AI endpoints will fail');
+    }
+    this.client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  }
 
   async generateMealPlan(req: MealPlanRequest) {
     const items = await this.prisma.menuItem.findMany({
