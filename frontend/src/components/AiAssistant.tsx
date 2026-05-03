@@ -34,7 +34,7 @@ export default function AiAssistant() {
     } catch (err: any) {
       const status = err?.response?.status;
       const errMsg = status === 500
-        ? 'Ошибка сервера. Проверьте, что ANTHROPIC_API_KEY установлен в Railway.'
+        ? 'Ошибка сервера. Проверьте, что GROQ_API_KEY установлен в Railway.'
         : status === 401
         ? 'Необходима авторизация. Попробуйте перезайти.'
         : 'Не удалось получить ответ. Проверьте соединение.';
