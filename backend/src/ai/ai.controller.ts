@@ -11,4 +11,9 @@ export class AiController {
   generateMealPlan(@Body() dto: MealPlanRequest) {
     return this.ai.generateMealPlan(dto);
   }
+
+  @Post('chat')
+  chat(@Body('history') history: { role: 'user' | 'assistant'; content: string }[]) {
+    return this.ai.chat(history ?? []);
+  }
 }

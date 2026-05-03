@@ -10,6 +10,7 @@ import ClientPage from './pages/ClientPage';
 import CourierPage from './pages/CourierPage';
 import DispatcherPage from './pages/DispatcherPage';
 import ToastHost from './components/ToastHost';
+import AiAssistant from './components/AiAssistant';
 
 function PrivateRoute({ roles, children }: { roles: UserRole[]; children: JSX.Element }) {
   const user = useAuthStore((s) => s.user);
@@ -176,6 +177,7 @@ function ClientShell({ children }: { children: JSX.Element }) {
         {children}
       </div>
       <MobileTabBar />
+      <AiAssistant />
       <ToastHost />
     </div>
   );

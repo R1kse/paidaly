@@ -94,4 +94,32 @@ ${menuText}
     const json = raw.startsWith('{') ? raw : raw.slice(raw.indexOf('{'));
     return JSON.parse(json);
   }
+
+  async chat(history: { role: 'user' | 'assistant'; content: string }[]) {
+    const items = await this.prisma.menuItem.findMany({
+      where: { isActive: true },
+      select: { id: true, title: true, price: true, calories: true, protein: true, carbs: true, fat: true, dietTags: true, allergens: true, dishType: true, description: true },
+    });
+
+    const menuText = items
+      .map((i) => `• ${i.title} (${i.dishType}) — ${i.calories ?? '?'} ккал, Б${i.protein ?? '?'}/Ж${i.fat ?? '?'}/У${i.carbs ?? '?'}г, ${i.price}₸, теги:${i.dietTags.join(',')}`)
+      .join('\n');
+
+    const system = `Ты — дружелюбный AI-ассистент ресторана здорового питания Paidaly.
+Специализация: щадящее питание для людей с проблемами ЖКТ (гастрит, СРК, ГЭРБ, панкреатит и др.).
+Отвечай кратко, по-русски, дружелюбно. Можешь рекомендовать блюда из меню по запросу.
+Не придумывай блюда, которых нет в меню. Если спрашивают о здоровье — давай общие советы и рекомендуй консультацию врача.
+
+Текущее меню ресторана:
+${menuText}`;
+
+    const message = await this.client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1024,
+      system,
+      messages: history.slice(-10),
+    });
+
+    return { reply: (message.content[0] as { text: string }).text };
+  }
 }
