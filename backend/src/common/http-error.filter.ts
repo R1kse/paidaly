@@ -25,9 +25,16 @@ export class HttpErrorFilter implements ExceptionFilter {
       const status = exception.getStatus();
       const res = exception.getResponse() as any;
       const message = typeof res === 'string' ? res : res.message;
-      const code = typeof message === 'string'
+      const isInternal = status === HttpStatus.INTERNAL_SERVER_ERROR;
+      const code = isInternal
+        ? 'INTERNAL_ERROR'
+        : typeof message === 'string'
         ? (KNOWN_CODES.has(message) ? message : status === HttpStatus.FORBIDDEN ? 'FORBIDDEN' : 'BAD_REQUEST')
         : 'BAD_REQUEST';
+
+      if (isInternal) {
+        console.error('[INTERNAL_ERROR]', message);
+      }
 
       response.status(status).json({
         code,

@@ -33,10 +33,11 @@ export default function AiAssistant() {
       setHistory([...newHistory, { role: 'assistant', content: data.reply }]);
     } catch (err: any) {
       const status = err?.response?.status;
-      const errMsg = status === 500
-        ? 'Ошибка сервера. Проверьте, что GROQ_API_KEY установлен в Railway.'
-        : status === 401
+      const serverMsg = err?.response?.data?.message;
+      const errMsg = status === 401
         ? 'Необходима авторизация. Попробуйте перезайти.'
+        : serverMsg
+        ? `Ошибка: ${serverMsg}`
         : 'Не удалось получить ответ. Проверьте соединение.';
       setHistory([...newHistory, { role: 'assistant', content: errMsg }]);
     } finally {

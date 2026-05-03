@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import Groq from 'groq-sdk';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -74,21 +74,30 @@ ${menuText}
   "tips": ["совет 1", "совет 2", "совет 3"]
 }`;
 
-    const response = await this.client.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
-      max_tokens: 2048,
-      temperature: 0.3,
-      messages: [{ role: 'user', content: prompt }],
-    });
+    try {
+      const response = await this.client.chat.completions.create({
+        model: 'llama-3.1-8b-instant',
+        max_tokens: 2048,
+        temperature: 0.3,
+        messages: [{ role: 'user', content: prompt }],
+      });
 
-    const raw = response.choices[0].message.content?.trim() ?? '{}';
-    const start = raw.indexOf('{');
-    const end = raw.lastIndexOf('}');
-    const json = start !== -1 && end !== -1 ? raw.slice(start, end + 1) : raw;
-    return JSON.parse(json);
+      const raw = response.choices[0].message.content?.trim() ?? '{}';
+      const start = raw.indexOf('{');
+      const end = raw.lastIndexOf('}');
+      const json = start !== -1 && end !== -1 ? raw.slice(start, end + 1) : raw;
+      return JSON.parse(json);
+    } catch (err: any) {
+      console.error('[AiService] generateMealPlan error:', err?.message ?? err);
+      throw new InternalServerErrorException(err?.message ?? 'Groq API error');
+    }
   }
 
   async chat(history: { role: 'user' | 'assistant'; content: string }[]) {
+    if (!process.env.GROQ_API_KEY) {
+      throw new InternalServerErrorException('GROQ_API_KEY is not configured');
+    }
+
     const menuText = await this.getMenuText();
 
     const system = `Ты — дружелюбный AI-ассистент ресторана здорового питания Paidaly.
@@ -99,16 +108,21 @@ ${menuText}
 Меню ресторана:
 ${menuText}`;
 
-    const response = await this.client.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
-      max_tokens: 1024,
-      temperature: 0.7,
-      messages: [
-        { role: 'system', content: system },
-        ...history.slice(-10),
-      ],
-    });
+    try {
+      const response = await this.client.chat.completions.create({
+        model: 'llama-3.1-8b-instant',
+        max_tokens: 1024,
+        temperature: 0.7,
+        messages: [
+          { role: 'system', content: system },
+          ...history.slice(-10),
+        ],
+      });
 
-    return { reply: response.choices[0].message.content ?? '' };
+      return { reply: response.choices[0].message.content ?? '' };
+    } catch (err: any) {
+      console.error('[AiService] chat error:', err?.message ?? err);
+      throw new InternalServerErrorException(err?.message ?? 'Groq API error');
+    }
   }
 }
