@@ -901,32 +901,24 @@ const DISH_TYPE_MAP: Record<string, string> = {
 };
 
 async function upsertMenu() {
-  await prisma.orderItemModifier.deleteMany();
-  await prisma.orderItem.deleteMany();
-  await prisma.payment.deleteMany();
-  await prisma.delivery.deleteMany();
-  await prisma.order.deleteMany();
-  await prisma.menuItemModifierGroup.deleteMany();
-  await prisma.modifierOption.deleteMany();
-  await prisma.modifierGroup.deleteMany();
-  await prisma.menuItem.deleteMany();
-  await prisma.menuCategory.deleteMany();
-
-await prisma.menuCategory.createMany({
-    skipDuplicates: true,
-    data: HEALTH_CATEGORIES.map((category, index) => ({
-      slug: category.slug,
-      title: category.title,
-      description: category.description,
-      sortOrder: index + 1,
-      isActive: true,
-    })),
-  });
+  for (const [index, category] of HEALTH_CATEGORIES.entries()) {
+    await prisma.menuCategory.upsert({
+      where: { slug: category.slug },
+      update: { title: category.title, description: category.description, sortOrder: index + 1 },
+      create: {
+        slug: category.slug,
+        title: category.title,
+        description: category.description,
+        sortOrder: index + 1,
+        isActive: true,
+      },
+    });
+  }
 
   const categories = await prisma.menuCategory.findMany();
   const categoryBySlug = new Map(categories.map((c) => [c.slug ?? '', c]));
 
-  const createdItems = [] as { id: string; dishType: string }[];
+  const upsertedItems = [] as { id: string; dishType: string }[];
 
   for (const item of MENU_ITEMS) {
     const categorySlug = item.dietTags[0];
@@ -934,32 +926,36 @@ await prisma.menuCategory.createMany({
     if (!category) {
       throw new Error(`Category not found for item ${item.slug}`);
     }
-    const created = await prisma.menuItem.create({
-      data: {
-        slug: item.slug,
-        title: item.name,
-        description: item.description,
-        ingredients: item.ingredients,
-        allergens: item.allergens,
-        dietTags: item.dietTags,
-        dishType: DISH_TYPE_MAP[item.dishType] as any,
-        price: item.basePriceKzt,
-        calories: item.calories,
-        protein: item.protein,
-        carbs: item.carbs,
-        fat: item.fat,
-        isActive: true,
-        categoryId: category.id,
-      },
+    const itemData = {
+      title: item.name,
+      description: item.description,
+      ingredients: item.ingredients,
+      allergens: item.allergens,
+      dietTags: item.dietTags,
+      dishType: DISH_TYPE_MAP[item.dishType] as any,
+      price: item.basePriceKzt,
+      calories: item.calories,
+      protein: item.protein,
+      carbs: item.carbs,
+      fat: item.fat,
+      isActive: true,
+      categoryId: category.id,
+    };
+    const upserted = await prisma.menuItem.upsert({
+      where: { slug: item.slug },
+      update: itemData,
+      create: { slug: item.slug, ...itemData },
       select: { id: true, dishType: true },
     });
-    createdItems.push(created);
+    upsertedItems.push(upserted);
   }
 
   const groups = [] as { id: string; name: string }[];
   for (const group of MODIFIER_GROUPS) {
-    const created = await prisma.modifierGroup.create({
-      data: {
+    const upserted = await prisma.modifierGroup.upsert({
+      where: { title: group.name },
+      update: { type: group.type, required: group.required, minSelected: group.minSelected, maxSelected: group.maxSelected },
+      create: {
         title: group.name,
         type: group.type,
         required: group.required,
@@ -969,17 +965,13 @@ await prisma.menuCategory.createMany({
       },
       select: { id: true, title: true },
     });
-    groups.push({ id: created.id, name: created.title });
+    groups.push({ id: upserted.id, name: upserted.title });
 
     for (const option of group.options) {
-      await prisma.modifierOption.create({
-        data: {
-          groupId: created.id,
-          title: option.name,
-          priceDelta: option.priceDelta,
-          sortOrder: 0,
-          isActive: true,
-        },
+      await prisma.modifierOption.upsert({
+        where: { groupId_title: { groupId: upserted.id, title: option.name } },
+        update: { priceDelta: option.priceDelta },
+        create: { groupId: upserted.id, title: option.name, priceDelta: option.priceDelta, sortOrder: 0, isActive: true },
       });
     }
   }
@@ -993,7 +985,7 @@ await prisma.menuCategory.createMany({
 
   const links: { menuItemId: string; modifierGroupId: string }[] = [];
 
-  for (const item of createdItems) {
+  for (const item of upsertedItems) {
     links.push({ menuItemId: item.id, modifierGroupId: portionGroupId });
     links.push({ menuItemId: item.id, modifierGroupId: removeGroupId });
 
