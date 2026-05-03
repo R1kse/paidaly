@@ -57,6 +57,18 @@ export class OrdersController {
     return this.ordersService.getOrderById(id, req.user.id, req.user.role);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.CLIENT)
+  @Post(':id/review')
+  createReview(
+    @Req() req: AuthRequest,
+    @Param('id') id: string,
+    @Body('rating') rating: number,
+    @Body('comment') comment?: string,
+  ) {
+    return this.ordersService.createReview(id, req.user.id, rating, comment);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Patch(':id/status')
   updateStatus(

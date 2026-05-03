@@ -13,6 +13,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { ProfileModule } from './profile/profile.module';
 import { AuditModule } from './audit/audit.module';
 import { MessagesModule } from './messages/messages.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { MessagesModule } from './messages/messages.module';
     ProfileModule,
     AuditModule,
     MessagesModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppGateway],

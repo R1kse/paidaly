@@ -199,6 +199,10 @@ function MobileTabBar() {
         <span className="tab-icon">📦</span>
         <span>Заказы</span>
       </NavLink>
+      <NavLink to="/client/meal-plan" className={({ isActive }) => `mobile-tab-item${isActive ? ' active' : ''}`}>
+        <span className="tab-icon">🤖</span>
+        <span>AI-рацион</span>
+      </NavLink>
       <NavLink to="/client/profile" className={({ isActive }) => `mobile-tab-item${isActive ? ' active' : ''}`}>
         <span className="tab-icon" style={{ position: 'relative', display: 'inline-block' }}>
           👤

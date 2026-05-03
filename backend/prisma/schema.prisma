@@ -203,9 +203,21 @@ model Order {
   payment           Payment?
   delivery          Delivery?
   chatMessages      ChatMessage[]
+  review            OrderReview?
 
   @@index([status])
   @@index([clientId])
+}
+
+model OrderReview {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
 }
 
 model ChatMessage {

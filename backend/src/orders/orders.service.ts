@@ -280,6 +280,7 @@ export class OrdersService {
         addressText: true,
         addressLat: true,
         addressLng: true,
+        review: { select: { rating: true, comment: true } },
       },
     });
   }
@@ -456,6 +457,19 @@ export class OrdersService {
 
     return updated;
   }
+
+  async createReview(orderId: string, userId: string, rating: number, comment?: string) {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.clientId !== userId) throw new ForbiddenException('FORBIDDEN');
+    if (order.status !== OrderStatus.DELIVERED) throw new BadRequestException('ORDER_NOT_DELIVERED');
+    return this.prisma.orderReview.upsert({
+      where: { orderId },
+      update: { rating, comment },
+      create: { orderId, rating, comment },
+    });
+  }
+
   private isWithinWorkingHours(date: DateTime, openMinutes: number, closeMinutes: number) {
     const minutes = date.hour * 60 + date.minute;
     return minutes >= openMinutes && minutes <= closeMinutes;
