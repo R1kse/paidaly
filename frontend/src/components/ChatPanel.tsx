@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../api/client';
 import { useAuthStore } from '../store/auth';
-import { getSocket } from '../ws/socket';
+import { getSocket, subscribeOrder } from '../ws/socket';
 
 type Msg = {
   id: string;
@@ -44,8 +44,11 @@ export default function ChatPanel({ orderId, dark = false }: Props) {
 
   // real-time
   useEffect(() => {
-    if (!token) return;
+    if (!token || !orderId) return;
     const socket = getSocket(token);
+
+    subscribeOrder(orderId);
+
     const handler = (msg: Msg) => {
       if (msg.orderId === orderId) {
         setMessages((prev) => {

@@ -4,6 +4,7 @@ import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { MessagesService } from './messages.service';
 import { WsEventsService } from '../websocket/ws-events.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 interface AuthRequest extends Request {
   user: { id: string; role: UserRole; name: string };
@@ -15,6 +16,7 @@ export class MessagesController {
   constructor(
     private readonly messages: MessagesService,
     private readonly wsEvents: WsEventsService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @Get(':orderId')
@@ -29,7 +31,17 @@ export class MessagesController {
     @Body('text') text: string,
   ) {
     const msg = await this.messages.create(req.user.id, orderId, text);
-    this.wsEvents.emitChatMessage({ orderId, message: msg });
+
+    const delivery = await this.prisma.delivery.findUnique({
+      where: { orderId },
+      select: { courierId: true },
+    });
+
+    this.wsEvents.emitChatMessage({
+      orderId,
+      message: msg,
+      courierId: delivery?.courierId ?? null,
+    });
     return msg;
   }
 }
