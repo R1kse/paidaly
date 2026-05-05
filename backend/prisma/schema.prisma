@@ -132,6 +132,7 @@ model MenuItem {
   dietTags       String[]               @default([])
   dishType       DishType               @default(MAIN)
   price          Int
+  weight         Int?
   calories       Int?
   protein        Int?
   carbs          Int?
