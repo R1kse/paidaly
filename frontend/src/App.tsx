@@ -10,7 +10,6 @@ import ClientPage from './pages/ClientPage';
 import CourierPage from './pages/CourierPage';
 import DispatcherPage from './pages/DispatcherPage';
 import ToastHost from './components/ToastHost';
-import AiAssistant from './components/AiAssistant';
 
 function PrivateRoute({ roles, children }: { roles: UserRole[]; children: JSX.Element }) {
   const user = useAuthStore((s) => s.user);
@@ -177,7 +176,6 @@ function ClientShell({ children }: { children: JSX.Element }) {
         {children}
       </div>
       <MobileTabBar />
-      <AiAssistant />
       <ToastHost />
     </div>
   );
@@ -201,11 +199,7 @@ function MobileTabBar() {
         <span className="tab-icon">📦</span>
         <span>Заказы</span>
       </NavLink>
-      <NavLink to="/client/meal-plan" className={({ isActive }) => `mobile-tab-item${isActive ? ' active' : ''}`}>
-        <span className="tab-icon">🤖</span>
-        <span>AI-рацион</span>
-      </NavLink>
-      <NavLink to="/client/profile" className={({ isActive }) => `mobile-tab-item${isActive ? ' active' : ''}`}>
+<NavLink to="/client/profile" className={({ isActive }) => `mobile-tab-item${isActive ? ' active' : ''}`}>
         <span className="tab-icon" style={{ position: 'relative', display: 'inline-block' }}>
           👤
           {cartQty > 0 && (

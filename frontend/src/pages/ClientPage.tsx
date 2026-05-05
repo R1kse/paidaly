@@ -5,7 +5,6 @@ import ClientCheckoutPage from './client/ClientCheckoutPage';
 import ClientOrdersPage from './client/ClientOrdersPage';
 import ClientOrderTrackingPage from './client/ClientOrderTrackingPage';
 import ClientProfilePage from './client/ClientProfilePage';
-import ClientMealPlanPage from './client/ClientMealPlanPage';
 
 export default function ClientPage() {
   return (
@@ -15,8 +14,7 @@ export default function ClientPage() {
       <Route path="checkout"               element={<ClientCheckoutPage />} />
       <Route path="orders"                 element={<ClientOrdersPage />} />
       <Route path="orders/:orderId"        element={<ClientOrderTrackingPage />} />
-      <Route path="meal-plan"              element={<ClientMealPlanPage />} />
-      <Route path="profile"               element={<ClientProfilePage />} />
+<Route path="profile"               element={<ClientProfilePage />} />
       <Route path="*"                      element={<ClientHomePage />} />
     </Routes>
   );
