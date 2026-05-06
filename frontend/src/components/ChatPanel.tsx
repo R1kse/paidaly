@@ -81,9 +81,10 @@ export default function ChatPanel({ orderId, dark = false }: Props) {
     setSending(true);
     try {
       const { data } = await api.post(`/messages/${orderId}`, { text: t });
-      setMessages((prev) =>
-        prev.map((m) => m.id === optimistic.id ? { ...data, orderId } : m),
-      );
+      setMessages((prev) => {
+        const without = prev.filter((m) => m.id !== data.id);
+        return without.map((m) => m.id === optimistic.id ? { ...data, orderId } : m);
+      });
     } catch {
       setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
       setText(t);
