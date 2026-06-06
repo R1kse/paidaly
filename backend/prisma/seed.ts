@@ -359,8 +359,6 @@ const DISH_TYPE_MAP: Record<string, string> = {
 };
 
 async function upsertMenu() {
-  await prisma.menuItem.updateMany({ where: {}, data: { isActive: false } });
-
   for (const [index, category] of HEALTH_CATEGORIES.entries()) {
     await prisma.menuCategory.upsert({
       where: { slug: category.slug },
@@ -463,6 +461,12 @@ async function upsertMenu() {
   await prisma.menuItemModifierGroup.createMany({
     data: links,
     skipDuplicates: true,
+  });
+
+  const newSlugs = MENU_ITEMS.map((i) => i.slug);
+  await prisma.menuItem.updateMany({
+    where: { slug: { notIn: newSlugs } },
+    data: { isActive: false },
   });
 }
 
