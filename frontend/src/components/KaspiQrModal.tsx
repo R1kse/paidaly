@@ -89,7 +89,7 @@ export default function KaspiQrModal({ orderId, amount, onClose }: Props) {
               background: '#fff',
             }}>
               <img
-                src="/kaspi-qr.png"
+                src={`${import.meta.env.BASE_URL}kaspi-qr.png`}
                 alt="Kaspi QR"
                 style={{ width: 200, height: 200, display: 'block' }}
               />
