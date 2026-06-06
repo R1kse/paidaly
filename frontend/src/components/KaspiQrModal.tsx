@@ -4,10 +4,11 @@ import { api } from '../api/client';
 type Props = {
   orderId: string;
   amount: number;
-  onClose: () => void;
+  onClose: () => void;  // переход к заказу
+  onBack?: () => void;  // просто закрыть модал
 };
 
-export default function KaspiQrModal({ orderId, amount, onClose }: Props) {
+export default function KaspiQrModal({ orderId, amount, onClose, onBack }: Props) {
   const [confirming, setConfirming] = useState(false);
   const [waitingDispatcher, setWaitingDispatcher] = useState(false);
 
@@ -118,7 +119,7 @@ export default function KaspiQrModal({ orderId, amount, onClose }: Props) {
             </button>
 
             <button
-              onClick={onClose}
+              onClick={onBack ?? onClose}
               style={{
                 width: '100%', padding: '10px', borderRadius: 14, border: '1.5px solid #ddd',
                 background: 'transparent', color: '#666', fontWeight: 600, fontSize: 13, cursor: 'pointer',

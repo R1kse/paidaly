@@ -170,6 +170,7 @@ export default function ClientCheckoutPage() {
         orderId={kaspiModal.orderId}
         amount={kaspiModal.amount}
         onClose={() => navigate(`/client/orders/${kaspiModal.orderId}`)}
+        onBack={() => setKaspiModal(null)}
       />
     )}
     <div className="checkout">
