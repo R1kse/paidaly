@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuthStore } from '../store/auth';
+import './login.css';
 
 export default function LoginPage() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -60,7 +61,7 @@ export default function LoginPage() {
             : 'Зарегистрируйтесь — это займёт минуту'}
         </p>
 
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 14 }}>
+        <form onSubmit={handleSubmit} className="login-form">
           {mode === 'register' && (
             <>
               <label>
@@ -103,14 +104,7 @@ export default function LoginPage() {
             />
           </label>
 
-          {error && (
-            <div style={{
-              background: '#FBE4E4', borderRadius: 12, padding: '10px 14px',
-              fontSize: 13, color: '#8A2E2E', fontWeight: 700,
-            }}>
-              {error}
-            </div>
-          )}
+          {error && <div className="login-error">{error}</div>}
 
           <button type="submit" className="auth-submit" disabled={loading}>
             {loading ? '...' : mode === 'login' ? 'Войти →' : 'Зарегистрироваться →'}
@@ -118,10 +112,10 @@ export default function LoginPage() {
         </form>
 
         {/* Divider */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0' }}>
-          <div style={{ flex: 1, height: 1, background: '#E3ECE1' }} />
-          <span style={{ fontSize: 12, color: '#6B8F71', fontWeight: 700 }}>или</span>
-          <div style={{ flex: 1, height: 1, background: '#E3ECE1' }} />
+        <div className="login-divider">
+          <div className="login-divider__line" />
+          <span className="login-divider__text">или</span>
+          <div className="login-divider__line" />
         </div>
 
         {/* Google button */}
@@ -131,13 +125,7 @@ export default function LoginPage() {
             const api = import.meta.env.VITE_API_URL || 'http://localhost:3000';
             window.location.href = `${api}/auth/google`;
           }}
-          style={{
-            width: '100%', padding: '12px 0', borderRadius: 14,
-            border: '1.5px solid #E3ECE1', background: '#fff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-            fontFamily: 'Nunito, sans-serif', fontWeight: 800, fontSize: 14,
-            color: '#1B3A2D', cursor: 'pointer',
-          }}
+          className="login-google-btn"
         >
           <svg width="20" height="20" viewBox="0 0 48 48">
             <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>

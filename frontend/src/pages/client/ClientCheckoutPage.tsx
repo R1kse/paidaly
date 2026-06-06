@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import { useCartStore } from '../../store/cart';
 import { Link, useNavigate } from 'react-router-dom';
+import KaspiQrModal from '../../components/KaspiQrModal';
 
 const defaultCenter: [number, number] = [43.238949, 76.889709];
 
@@ -52,6 +53,7 @@ export default function ClientCheckoutPage() {
   const [preorder, setPreorder] = useState(false);
   const [scheduledFor, setScheduledFor] = useState('');
   const [error, setError] = useState('');
+  const [kaspiModal, setKaspiModal] = useState<{ orderId: string; amount: number } | null>(null);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [searchError, setSearchError] = useState('');
@@ -100,8 +102,15 @@ export default function ClientCheckoutPage() {
       };
 
       const { data } = await api.post('/orders', payload);
-      cart.clear();
-      navigate(`/client/orders/${data.orderId}`);
+
+      if (cart.paymentMethod === 'KASPI') {
+        // Показываем модал с QR-кодом Kaspi
+        setKaspiModal({ orderId: data.orderId, amount: data.totalAmount });
+        cart.clear();
+      } else {
+        cart.clear();
+        navigate(`/client/orders/${data.orderId}`);
+      }
     } catch (err: any) {
       const message = err?.response?.data?.message || 'Ошибка создания заказа';
       setError(message);
@@ -155,6 +164,14 @@ export default function ClientCheckoutPage() {
   const totalPrice = cart.lines.reduce((s, l) => s + l.basePrice * l.quantity, 0);
 
   return (
+    <>
+    {kaspiModal && (
+      <KaspiQrModal
+        orderId={kaspiModal.orderId}
+        amount={kaspiModal.amount}
+        onClose={() => navigate(`/client/orders/${kaspiModal.orderId}`)}
+      />
+    )}
     <div className="checkout">
       <div className="has-mobile-cta" style={{ display: 'grid', gap: 16 }}>
         {/* Header */}
@@ -419,5 +436,6 @@ export default function ClientCheckoutPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

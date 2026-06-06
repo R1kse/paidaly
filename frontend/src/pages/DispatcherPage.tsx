@@ -415,7 +415,16 @@ function DashboardTab({ orders, couriers, onViewOrders }: DashboardProps) {
                     <td><span className="order-id-cell">#{order.id.slice(-6)}</span></td>
                     <td>{order.addressText ?? <span className="badge-teal">Самовывоз</span>}</td>
                     <td>{fmtMoney(order.totalAmount)}</td>
-                    <td><StatusBadge status={order.status} /></td>
+                    <td>
+                      <StatusBadge status={order.status} />
+                      {order.payment?.method === 'KASPI' && order.payment?.status === 'PAID' && order.status === 'CREATED' && (
+                        <span style={{
+                          display: 'inline-block', marginLeft: 4,
+                          background: '#FFF3F3', color: '#E50000', border: '1px solid #FFD0D0',
+                          borderRadius: 6, padding: '1px 5px', fontSize: 10, fontWeight: 800,
+                        }}>💳</span>
+                      )}
+                    </td>
                     <td>{order.delivery?.courier?.name ?? '—'}</td>
                     <td style={{ color: 'var(--text-muted)', fontSize: 12 }}>
                       {new Date(order.createdAt).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}
@@ -555,7 +564,18 @@ function OrdersTab({ orders, couriers, statusFilter, onStatusFilter, onSetStatus
                     {order.addressText ?? <span className="badge-teal">Самовывоз</span>}
                   </td>
                   <td>{fmtMoney(order.totalAmount)}</td>
-                  <td style={{ fontSize: 11, color: 'var(--text-muted)' }}>{order.paymentMethod ?? '—'}</td>
+                  <td style={{ fontSize: 11 }}>
+                    {order.payment?.method ?? '—'}
+                    {order.payment?.method === 'KASPI' && order.payment?.status === 'PAID' && (
+                      <span style={{
+                        display: 'inline-block', marginLeft: 6,
+                        background: '#FFF3F3', color: '#E50000', border: '1px solid #FFD0D0',
+                        borderRadius: 6, padding: '1px 6px', fontSize: 10, fontWeight: 800,
+                      }}>
+                        💳 Оплачено
+                      </span>
+                    )}
+                  </td>
                   <td><StatusBadge status={order.status} /></td>
                   <td style={{ fontSize: 12 }}>
                     {order.delivery?.courier ? (
@@ -581,7 +601,16 @@ function OrdersTab({ orders, couriers, statusFilter, onStatusFilter, onSetStatus
                   </td>
                   <td onClick={(e) => e.stopPropagation()}>
                     <div style={{ display: 'flex', gap: 4 }}>
-                      {order.status === 'CREATED' && (
+                      {order.status === 'CREATED' && order.payment?.method === 'KASPI' && order.payment?.status === 'PAID' && (
+                        <button
+                          className="sm primary"
+                          onClick={() => onSetStatus(order.id, 'CONFIRMED')}
+                          style={{ background: '#E50000', borderColor: '#E50000', whiteSpace: 'nowrap' }}
+                        >
+                          💳 Kaspi ✓
+                        </button>
+                      )}
+                      {order.status === 'CREATED' && !(order.payment?.method === 'KASPI' && order.payment?.status === 'PAID') && (
                         <button className="sm primary" onClick={() => onSetStatus(order.id, 'CONFIRMED')}>Подтвердить</button>
                       )}
                       {order.status === 'CONFIRMED' && (

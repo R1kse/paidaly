@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import { useCartStore } from '../../store/cart';
+import './client-orders.css';
 
 type Order = {
   id: string;
@@ -26,14 +27,14 @@ function nextId() {
 function StarRating({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const [hovered, setHovered] = useState(0);
   return (
-    <div style={{ display: 'flex', gap: 4 }}>
+    <div className="review-stars">
       {[1, 2, 3, 4, 5].map((star) => (
         <button
           key={star}
           onClick={() => onChange(star)}
           onMouseEnter={() => setHovered(star)}
           onMouseLeave={() => setHovered(0)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, fontSize: 22, lineHeight: 1 }}
+          className="review-star-btn"
         >
           <span style={{ color: star <= (hovered || value) ? '#F59E0B' : '#D1D5DB' }}>★</span>
         </button>
@@ -55,8 +56,8 @@ function ReviewForm({ orderId, existing }: { orderId: string; existing?: Order['
 
   if (existing && !open) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span style={{ color: '#F59E0B', fontSize: 14 }}>{'★'.repeat(existing.rating)}{'☆'.repeat(5 - existing.rating)}</span>
+      <div className="review-existing">
+        <span className="review-existing__stars">{'★'.repeat(existing.rating)}{'☆'.repeat(5 - existing.rating)}</span>
         <button className="sm" onClick={() => setOpen(true)} style={{ fontSize: 11 }}>Изменить</button>
       </div>
     );
@@ -69,25 +70,25 @@ function ReviewForm({ orderId, existing }: { orderId: string; existing?: Order['
   }
 
   return (
-    <div style={{ marginTop: 10, padding: '12px 14px', background: 'var(--bg-tint)', borderRadius: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={{ fontWeight: 800, fontSize: 13 }}>Оцените заказ</div>
+    <div className="review-form">
+      <div className="review-form__title">Оцените заказ</div>
       <StarRating value={rating} onChange={setRating} />
       <textarea
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         placeholder="Комментарий (необязательно)"
         rows={2}
-        style={{ padding: '8px 10px', borderRadius: 10, border: '1.5px solid var(--line)', background: '#fff', fontSize: 13, fontFamily: 'Nunito, sans-serif', resize: 'none', outline: 'none' }}
+        className="review-textarea"
       />
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div className="review-form__buttons">
         <button
           onClick={() => mutate()}
           disabled={rating === 0 || isPending}
-          style={{ flex: 1, padding: '8px', borderRadius: 10, border: 'none', background: rating > 0 ? 'var(--green)' : 'var(--line)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: rating > 0 ? 'pointer' : 'default', fontFamily: 'Nunito, sans-serif' }}
+          className={`review-form__submit-btn ${rating > 0 ? 'review-form__submit-btn--active' : 'review-form__submit-btn--disabled'}`}
         >
           {isPending ? 'Сохраняем...' : 'Сохранить'}
         </button>
-        <button onClick={() => setOpen(false)} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid var(--line)', background: 'none', cursor: 'pointer', fontFamily: 'Nunito, sans-serif', fontWeight: 700 }}>Отмена</button>
+        <button onClick={() => setOpen(false)} className="review-form__cancel-btn">Отмена</button>
       </div>
     </div>
   );
@@ -123,31 +124,29 @@ export default function ClientOrdersPage() {
   if (isLoading) return <div className="card" style={{ textAlign: 'center', padding: 40 }}><p className="small-text">Загрузка заказов...</p></div>;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div className="orders-list">
       {(!data || data.length === 0) && (
-        <div className="card" style={{ textAlign: 'center', padding: 40 }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>📦</div>
+        <div className="card orders-empty">
+          <div className="orders-empty__icon">📦</div>
           <p className="small-text">Заказов пока нет</p>
         </div>
       )}
       {data?.map((order) => (
-        <div key={order.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div key={order.id} className="card order-card">
+          <div className="order-card__header">
             <div>
-              <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
-                Заказ #{order.id.slice(-6).toUpperCase()}
-              </div>
-              <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>
+              <div className="order-card__id">Заказ #{order.id.slice(-6).toUpperCase()}</div>
+              <div className="order-card__date">
                 {new Date(order.createdAt).toLocaleString('ru', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
               </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
+            <div className="order-card__right">
               <span className={`status ${order.status}`}>{STATUS_LABEL[order.status] ?? order.status}</span>
-              <div style={{ fontWeight: 900, fontSize: 16, marginTop: 4, color: 'var(--green)' }}>{order.totalAmount.toLocaleString('ru')} ₸</div>
+              <div className="order-card__amount">{order.totalAmount.toLocaleString('ru')} ₸</div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div className="order-card__actions">
             {!['DELIVERED', 'CANCELED'].includes(order.status) && (
               <Link to={`/client/orders/${order.id}`} style={{ textDecoration: 'none' }}>
                 <button className="sm primary">📍 Отслеживать</button>

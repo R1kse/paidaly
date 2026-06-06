@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { MapContainer, Marker, TileLayer } from 'react-leaflet';
 import { restaurantIcon, addressIcon, courierIcon } from '../../map/markers';
 import { RouteLine } from '../../map/RouteLine';
@@ -24,6 +24,8 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function ClientOrderTrackingPage() {
   const { orderId } = useParams();
+  const [searchParams] = useSearchParams();
+  const paymentResult = searchParams.get('payment'); // 'success' | 'failed' | null
   const token = useAuthStore((s) => s.token);
   const [order, setOrder] = useState<any>(null);
   const [courierPos, setCourierPos] = useState<[number, number] | null>(null);
@@ -107,6 +109,27 @@ export default function ClientOrderTrackingPage() {
 
   return (
     <div style={{ display: 'grid', gap: 16, maxWidth: 760, margin: '0 auto' }}>
+
+      {/* PayBox payment result banner */}
+      {paymentResult === 'success' && (
+        <div style={{ background: '#E6F7ED', border: '1.5px solid #3A9E5F', borderRadius: 14, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 24 }}>✅</span>
+          <div>
+            <div style={{ fontWeight: 800, color: '#1E6B3C', fontSize: 14 }}>Оплата прошла успешно!</div>
+            <div style={{ fontSize: 12, color: '#2E8B57', marginTop: 2 }}>Ваш заказ будет подтверждён в ближайшее время.</div>
+          </div>
+        </div>
+      )}
+      {paymentResult === 'failed' && (
+        <div style={{ background: '#FBE4E4', border: '1.5px solid #C0392B', borderRadius: 14, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 24 }}>❌</span>
+          <div>
+            <div style={{ fontWeight: 800, color: '#8A2E2E', fontSize: 14 }}>Оплата не прошла</div>
+            <div style={{ fontSize: 12, color: '#A93226', marginTop: 2 }}>Попробуйте ещё раз или выберите другой способ оплаты.</div>
+          </div>
+        </div>
+      )}
+
       {/* Status card */}
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 20 }}>

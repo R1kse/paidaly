@@ -1,0 +1,262 @@
+/* ── ClientHomePage ── */
+.home-hero {
+  margin: 0 0 20px;
+  border-radius: 20px;
+  padding: 20px 22px;
+  background: linear-gradient(135deg, #3A9E5F, #8BC34A);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.home-hero__circle {
+  position: absolute;
+  right: -30px;
+  top: -20px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.home-hero__label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  opacity: 0.85;
+}
+
+.home-hero__title {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  margin-top: 6px;
+  line-height: 1.2;
+}
+
+.home-hero__btn {
+  margin-top: 12px;
+  background: #fff;
+  color: #1B3A2D;
+  border: 0;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-weight: 800;
+  font-size: 13px;
+  font-family: 'Nunito', sans-serif;
+  cursor: pointer;
+}
+
+/* ── Categories ── */
+.home-categories {
+  margin-bottom: 20px;
+}
+
+.home-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.home-section-header h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.home-section-header__link {
+  font-size: 13px;
+  color: #3A9E5F;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.home-categories__scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.home-category-card {
+  min-width: 80px;
+  border-radius: 16px;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.home-category-card--active {
+  border: 2px solid #3A9E5F;
+}
+
+.home-category-card--inactive {
+  border: 2px solid transparent;
+}
+
+.home-category-card__emoji {
+  font-size: 28px;
+}
+
+.home-category-card__title {
+  font-size: 11px;
+  font-weight: 800;
+  color: #1B3A2D;
+}
+
+/* ── Popular ── */
+.home-popular {
+  margin-bottom: 20px;
+}
+
+.home-popular__scroll {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.home-popular-card {
+  min-width: 190px;
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px -14px rgba(27, 58, 45, 0.22);
+  flex-shrink: 0;
+}
+
+.home-popular-card__image {
+  height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 52px;
+  position: relative;
+}
+
+.home-popular-card__body {
+  padding: 12px;
+}
+
+.home-popular-card__title {
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1.2;
+  color: #1B3A2D;
+}
+
+.home-popular-card__desc {
+  font-size: 11px;
+  color: #6B8F71;
+  margin-top: 2px;
+}
+
+.home-popular-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.home-popular-card__price {
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.home-popular-card__add-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #3A9E5F, #8BC34A);
+  border: 0;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* ── Newest ── */
+.home-newest {
+  /* just a container */
+}
+
+.home-newest__heading {
+  margin: 0 0 12px;
+  font-size: 17px;
+}
+
+.home-newest__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.home-newest-card {
+  display: flex;
+  gap: 12px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 12px;
+  box-shadow: 0 4px 14px -12px rgba(27, 58, 45, 0.2);
+  align-items: center;
+}
+
+.home-newest-card__image {
+  width: 70px;
+  height: 70px;
+  border-radius: 14px;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+}
+
+.home-newest-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.home-newest-card__title {
+  font-weight: 800;
+  font-size: 14px;
+  color: #1B3A2D;
+}
+
+.home-newest-card__desc {
+  font-size: 11px;
+  color: #6B8F71;
+  margin-top: 2px;
+}
+
+.home-newest-card__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.home-newest-card__price {
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.home-newest-card__add-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #3A9E5F, #8BC34A);
+  border: 0;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  cursor: pointer;
+}

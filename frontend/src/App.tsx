@@ -10,6 +10,7 @@ import ClientPage from './pages/ClientPage';
 import CourierPage from './pages/CourierPage';
 import DispatcherPage from './pages/DispatcherPage';
 import ToastHost from './components/ToastHost';
+import './app.css';
 
 function PrivateRoute({ roles, children }: { roles: UserRole[]; children: JSX.Element }) {
   const user = useAuthStore((s) => s.user);
@@ -26,12 +27,8 @@ function AppShell({ children }: { children: JSX.Element }) {
   return (
     <div className="app-shell">
       <header>
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: 10,
-            background: 'linear-gradient(135deg, #3A9E5F, #8BC34A)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
-          }}>🌿</div>
+        <Link to="/" className="app-shell-logo">
+          <div className="app-shell-logo__icon">🌿</div>
           <h1 style={{ color: '#fff', fontSize: 18 }}>paidaly</h1>
         </Link>
         <nav>
@@ -61,110 +58,54 @@ function ClientShell({ children }: { children: JSX.Element }) {
     ? user.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
     : '??';
 
-  const navLinkStyle = ({ isActive }: { isActive: boolean }) => ({
-    fontSize: 14,
-    fontWeight: 700,
-    padding: '6px 14px',
-    borderRadius: 999,
-    textDecoration: 'none',
-    color: isActive ? '#3A9E5F' : '#1B3A2D',
-    background: isActive ? 'rgba(58,158,95,.1)' : 'transparent',
-    transition: 'all 0.15s',
-    fontFamily: 'Nunito, sans-serif',
-  });
-
   return (
-    <div style={{ minHeight: '100vh', background: '#F7FAF5', fontFamily: 'Nunito, sans-serif' }}>
+    <div className="client-shell">
       {/* ── Client header ── */}
-      <header style={{
-        position: 'sticky', top: 0, zIndex: 100,
-        background: '#fff',
-        borderBottom: '1.5px solid #E3ECE1',
-        height: 'calc(60px + env(safe-area-inset-top))',
-        paddingTop: 'env(safe-area-inset-top)',
-        display: 'flex', alignItems: 'center',
-        paddingLeft: 24, paddingRight: 24, gap: 0,
-      }}>
+      <header className="client-header">
         {/* Logo */}
-        <Link to="/client" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', marginRight: 28, flexShrink: 0 }}>
-          <div style={{
-            width: 34, height: 34, borderRadius: 10,
-            background: 'linear-gradient(135deg, #3A9E5F, #8BC34A)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17,
-          }}>🌿</div>
-          <span style={{ fontFamily: 'Unbounded, sans-serif', fontWeight: 700, fontSize: 17, color: '#1B3A2D', letterSpacing: '-0.01em' }}>
-            paidaly
-          </span>
+        <Link to="/client" className="client-header__logo">
+          <div className="client-header__logo-icon">🌿</div>
+          <span className="client-header__logo-name">paidaly</span>
         </Link>
 
         {/* Center nav */}
-        <nav className="client-header-nav" style={{ display: 'flex', gap: 2, flex: 1 }}>
-          <NavLink to="/client" end style={navLinkStyle}>Главная</NavLink>
-          <NavLink to="/client/menu" style={navLinkStyle}>Меню</NavLink>
-          <NavLink to="/client/orders" style={navLinkStyle}>Мои заказы</NavLink>
+        <nav className="client-header__nav">
+          <NavLink to="/client" end className={({ isActive }) => `client-nav-link${isActive ? ' client-nav-link--active' : ''}`}>Главная</NavLink>
+          <NavLink to="/client/menu" className={({ isActive }) => `client-nav-link${isActive ? ' client-nav-link--active' : ''}`}>Меню</NavLink>
+          <NavLink to="/client/orders" className={({ isActive }) => `client-nav-link${isActive ? ' client-nav-link--active' : ''}`}>Мои заказы</NavLink>
         </nav>
 
         {/* Right side */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+        <div className="client-header__right">
           {/* Address */}
           <div className="client-header-address"><AddressPicker /></div>
 
           {/* Search */}
-          <button className="client-header-search" onClick={() => navigate('/client/menu')} style={{
-            width: 36, height: 36, borderRadius: 10,
-            background: '#F7FAF5', border: '1.5px solid #E3ECE1',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 16, cursor: 'pointer', color: '#1B3A2D', padding: 0,
-          }}>
+          <button className="client-header__icon-btn" onClick={() => navigate('/client/menu')}>
             🔍
           </button>
 
           {/* Cart */}
-          <button onClick={() => navigate('/client/checkout')} style={{
-            width: 36, height: 36, borderRadius: 10,
-            background: '#F7FAF5', border: '1.5px solid #E3ECE1',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 16, cursor: 'pointer', color: '#1B3A2D', position: 'relative', padding: 0,
-          }}>
+          <button className="client-header__icon-btn" onClick={() => navigate('/client/checkout')}>
             🛍
             {cartQty > 0 && (
-              <span style={{
-                position: 'absolute', top: -3, right: -3,
-                width: 16, height: 16, borderRadius: '50%',
-                background: '#E07070', color: '#fff',
-                fontSize: 9, fontWeight: 800,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                border: '2px solid #fff',
-              }}>
+              <span className="client-header__cart-badge">
                 {cartQty > 9 ? '9+' : cartQty}
               </span>
             )}
           </button>
 
           {/* Bell */}
-          <button className="client-header-bell" style={{
-            width: 36, height: 36, borderRadius: 10,
-            background: '#F7FAF5', border: '1.5px solid #E3ECE1',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 16, cursor: 'pointer', color: '#1B3A2D', position: 'relative', padding: 0,
-          }}>
+          <button className="client-header__icon-btn">
             🔔
           </button>
 
           {/* Avatar → profile */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div className="client-header__avatar-wrap">
             <button
               title="Профиль"
               onClick={() => navigate('/client/profile')}
-              style={{
-                width: 36, height: 36, borderRadius: '50%',
-                background: 'linear-gradient(135deg, #8BC34A, #3A9E5F)',
-                border: 'none', color: '#fff',
-                fontWeight: 800, fontSize: 13,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', padding: 0,
-                fontFamily: 'Nunito, sans-serif',
-              }}
+              className="client-header__avatar-btn"
             >
               {initials}
             </button>
@@ -172,7 +113,7 @@ function ClientShell({ children }: { children: JSX.Element }) {
         </div>
       </header>
 
-      <div className="client-content-wrapper" style={{ maxWidth: 1160, margin: '0 auto', padding: '24px 24px 64px' }}>
+      <div className="client-shell__content">
         {children}
       </div>
       <MobileTabBar />
@@ -199,18 +140,11 @@ function MobileTabBar() {
         <span className="tab-icon">📦</span>
         <span>Заказы</span>
       </NavLink>
-<NavLink to="/client/profile" className={({ isActive }) => `mobile-tab-item${isActive ? ' active' : ''}`}>
-        <span className="tab-icon" style={{ position: 'relative', display: 'inline-block' }}>
+      <NavLink to="/client/profile" className={({ isActive }) => `mobile-tab-item${isActive ? ' active' : ''}`}>
+        <span className="tab-icon mobile-tab-icon-wrap">
           👤
           {cartQty > 0 && (
-            <span style={{
-              position: 'absolute', top: -4, right: -8,
-              minWidth: 14, height: 14, borderRadius: 7,
-              background: '#E07070', color: '#fff',
-              fontSize: 8, fontWeight: 800,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              border: '1.5px solid #fff', padding: '0 2px',
-            }}>{cartQty > 9 ? '9+' : cartQty}</span>
+            <span className="mobile-tab-badge">{cartQty > 9 ? '9+' : cartQty}</span>
           )}
         </span>
         <span>Профиль</span>
@@ -259,8 +193,8 @@ export default function App() {
 
   if (!ready) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#F7FAF5' }}>
-        <p style={{ color: '#6B8F71', fontFamily: 'Nunito, sans-serif', fontWeight: 600 }}>Загрузка...</p>
+      <div className="app-loading">
+        <p className="app-loading__text">Загрузка...</p>
       </div>
     );
   }

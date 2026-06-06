@@ -1,29 +1,26 @@
-﻿import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { AuditAction, DeliveryType, OrderStatus, PaymentStatus, UserRole } from '@prisma/client';
 import { DateTime } from 'luxon';
 import { PrismaService } from '../prisma/prisma.service';
 import { SettingsService } from '../settings/settings.service';
-import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { WsEventsService } from '../websocket/ws-events.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import { OrderFlowService } from './flow/order-flow.service';
 import { AuditService } from '../audit/audit.service';
 
+// временная зона для всех расчетов дат
 const TIME_ZONE = 'Asia/Almaty';
 
 @Injectable()
 export class OrdersService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly settingsService: SettingsService,
-    private readonly wsEvents: WsEventsService,
-    private readonly notifications: NotificationsService,
-    private readonly orderFlow: OrderFlowService,
-    private readonly audit: AuditService,
+    private prisma: PrismaService,
+    private settingsService: SettingsService,
+    private wsEvents: WsEventsService,
+    private notifications: NotificationsService,
+    private audit: AuditService,
   ) {}
 
-  async createOrder(userId: string, dto: CreateOrderDto) {
+  async createOrder(userId: string, dto: any) {
     const settings = await this.settingsService.getRestaurantSettings();
 
     let distanceKm: number | null = null;
@@ -34,19 +31,33 @@ export class OrdersService {
         throw new BadRequestException('DELIVERY_ADDRESS_REQUIRED');
       }
 
-      distanceKm = this.getDistanceKm(
-        settings.restaurantLat,
-        settings.restaurantLng,
-        dto.addressLat,
-        dto.addressLng,
-      );
-      deliveryFeeAmount =
-        distanceKm > settings.freeDeliveryRadiusKm ? settings.longDistanceFeeKzt ?? 0 : 0;
+      const lat1 = settings.restaurantLat;
+      const lng1 = settings.restaurantLng;
+      const lat2 = dto.addressLat;
+      const lng2 = dto.addressLng;
+
+      const R = 6371;
+      const dLat = ((lat2 - lat1) * Math.PI) / 180;
+      const dLng = ((lng2 - lng1) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+          Math.cos((lat2 * Math.PI) / 180) *
+          Math.sin(dLng / 2) *
+          Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      distanceKm = R * c;
+
+      // если дальше чем бесплатный радиус - берем доп плату
+      if (distanceKm > settings.freeDeliveryRadiusKm) {
+        deliveryFeeAmount = settings.longDistanceFeeKzt ?? 0;
+      }
     }
 
     const now = DateTime.now().setZone(TIME_ZONE);
     let scheduledFor: DateTime | null = null;
 
+    // обрабатываем предзаказ
     if (dto.scheduledFor) {
       if (!settings.allowPreorder) {
         throw new BadRequestException('PREORDER_NOT_ALLOWED');
@@ -62,17 +73,20 @@ export class OrdersService {
       }
     }
 
-    const menuItemIds = dto.items.map((item) => item.menuItemId);
+    // загружаем блюда из бд
+    const menuItemIds: string[] = [];
+    for (const item of dto.items) {
+      menuItemIds.push(item.menuItemId);
+    }
     const uniqueMenuItemIds = Array.from(new Set(menuItemIds));
+
     const menuItems = await this.prisma.menuItem.findMany({
       where: { id: { in: uniqueMenuItemIds }, isActive: true },
       include: {
         modifierGroups: {
           include: {
             modifierGroup: {
-              include: {
-                options: true,
-              },
+              include: { options: true },
             },
           },
         },
@@ -83,107 +97,113 @@ export class OrdersService {
       throw new BadRequestException('INVALID_ITEMS');
     }
 
-    const optionIds = dto.items.flatMap((item) => item.modifierOptionIds ?? []);
+    // загружаем все модификаторы из бд
+    const optionIds: string[] = [];
+    for (const item of dto.items) {
+      const mods = item.modifierOptionIds ?? [];
+      for (const id of mods) {
+        optionIds.push(id);
+      }
+    }
     const uniqueOptionIds = Array.from(new Set(optionIds));
 
-    const optionsById = uniqueOptionIds.length
+    const optionsFromDb: any[] = uniqueOptionIds.length
       ? await this.prisma.modifierOption.findMany({
           where: { id: { in: uniqueOptionIds }, isActive: true },
           include: { group: true },
         })
       : [];
 
-    const optionMap = new Map(optionsById.map((option) => [option.id, option]));
+    const optionMap = new Map<string, any>();
+    for (const opt of optionsFromDb) {
+      optionMap.set(opt.id, opt);
+    }
+
     if (uniqueOptionIds.length !== optionMap.size) {
       throw new BadRequestException('INVALID_MODIFIERS');
     }
 
-    const orderItemsData: {
-      menuItemId: string;
-      titleSnapshot: string;
-      unitPrice: number;
-      quantity: number;
-      lineTotal: number;
-      modifiers: {
-        modifierOptionId: string;
-        titleSnapshot: string;
-        priceDeltaSnapshot: number;
-      }[];
-    }[] = [];
-
+    // считаем стоимость каждой позиции
+    const orderItemsData: any[] = [];
     let subtotal = 0;
 
     for (const itemDto of dto.items) {
-      const menuItem = menuItems.find((item) => item.id === itemDto.menuItemId);
+      const menuItem = menuItems.find((m: any) => m.id === itemDto.menuItemId);
       if (!menuItem) {
         throw new BadRequestException('INVALID_ITEMS');
       }
 
-      const selectedOptions = (itemDto.modifierOptionIds ?? []).map((id) => {
-        const option = optionMap.get(id);
-        if (!option) {
+      const selectedOptions: any[] = [];
+      for (const optId of itemDto.modifierOptionIds ?? []) {
+        const opt = optionMap.get(optId);
+        if (!opt) {
           throw new BadRequestException('INVALID_MODIFIERS');
         }
-        return option;
-      });
+        selectedOptions.push(opt);
+      }
 
-      const groupsForItem = menuItem.modifierGroups.map((relation) => relation.modifierGroup);
-      const allowedGroupIds = new Set(groupsForItem.map((group) => group.id));
+      const groupsForItem = menuItem.modifierGroups.map((rel: any) => rel.modifierGroup);
+      const allowedGroupIds = new Set(groupsForItem.map((g: any) => g.id));
 
-      const selectedByGroup = new Map<string, typeof selectedOptions>();
-      for (const option of selectedOptions) {
-        if (!allowedGroupIds.has(option.groupId)) {
+      const selectedByGroup = new Map<string, any[]>();
+      for (const opt of selectedOptions) {
+        if (!allowedGroupIds.has(opt.groupId)) {
           throw new BadRequestException('INVALID_MODIFIERS');
         }
-
-        const groupSelections = selectedByGroup.get(option.groupId) ?? [];
-        groupSelections.push(option);
-        selectedByGroup.set(option.groupId, groupSelections);
+        const existing = selectedByGroup.get(opt.groupId) ?? [];
+        existing.push(opt);
+        selectedByGroup.set(opt.groupId, existing);
       }
 
       for (const group of groupsForItem) {
         const selections = selectedByGroup.get(group.id) ?? [];
         const count = selections.length;
 
-        // Only enforce upper bounds — required/minSelected are advisory (frontend pre-selects defaults)
         if (group.type === 'SINGLE' && count > 1) {
           throw new BadRequestException('INVALID_MODIFIERS');
         }
-
         if (count > group.maxSelected) {
           throw new BadRequestException('INVALID_MODIFIERS');
         }
       }
 
-      const optionsTotal = selectedOptions.reduce(
-        (sum, option) => sum + option.priceDelta,
-        0,
-      );
+      // считаем итоговую цену позиции с модификаторами
+      let optionsTotal = 0;
+      for (const opt of selectedOptions) {
+        optionsTotal += opt.priceDelta;
+      }
 
       const unitPrice = menuItem.price + optionsTotal;
       const lineTotal = unitPrice * itemDto.quantity;
       subtotal += lineTotal;
 
+      const modifiers: any[] = [];
+      for (const opt of selectedOptions) {
+        modifiers.push({
+          modifierOptionId: opt.id,
+          titleSnapshot: opt.title,
+          priceDeltaSnapshot: opt.priceDelta,
+        });
+      }
+
       orderItemsData.push({
         menuItemId: menuItem.id,
         titleSnapshot: menuItem.title,
-        unitPrice,
+        unitPrice: unitPrice,
         quantity: itemDto.quantity,
-        lineTotal,
-        modifiers: selectedOptions.map((option) => ({
-          modifierOptionId: option.id,
-          titleSnapshot: option.title,
-          priceDeltaSnapshot: option.priceDelta,
-        })),
+        lineTotal: lineTotal,
+        modifiers: modifiers,
       });
     }
 
+    // проверяем минимальную сумму заказа
     if (subtotal < settings.minOrderAmount) {
       throw new BadRequestException('MIN_ORDER_NOT_MET');
     }
 
     const totalAmount = subtotal + deliveryFeeAmount;
 
+    // создаем заказ в транзакции
     const created = await this.prisma.$transaction(async (tx) => {
       const order = await tx.order.create({
         data: {
@@ -195,10 +215,10 @@ export class OrdersService {
           addressText: dto.addressText,
           addressLat: dto.addressLat,
           addressLng: dto.addressLng,
-          distanceKm,
+          distanceKm: distanceKm,
           subtotalAmount: subtotal,
-          deliveryFeeAmount,
-          totalAmount,
+          deliveryFeeAmount: deliveryFeeAmount,
+          totalAmount: totalAmount,
         },
       });
 
@@ -216,11 +236,11 @@ export class OrdersService {
 
         if (item.modifiers.length > 0) {
           await tx.orderItemModifier.createMany({
-            data: item.modifiers.map((modifier) => ({
+            data: item.modifiers.map((mod: any) => ({
               orderItemId: orderItem.id,
-              modifierOptionId: modifier.modifierOptionId,
-              titleSnapshot: modifier.titleSnapshot,
-              priceDeltaSnapshot: modifier.priceDeltaSnapshot,
+              modifierOptionId: mod.modifierOptionId,
+              titleSnapshot: mod.titleSnapshot,
+              priceDeltaSnapshot: mod.priceDeltaSnapshot,
             })),
           });
         }
@@ -238,6 +258,8 @@ export class OrdersService {
       return order;
     });
 
+    console.log('[ORDER] created order:', created.id, 'total:', created.totalAmount);
+
     await this.audit.log({
       actorUserId: userId,
       action: AuditAction.ORDER_CREATED,
@@ -245,6 +267,7 @@ export class OrdersService {
       data: { totalAmount: created.totalAmount },
     });
 
+    // уведомляем диспетчеров и клиента
     await this.notifications.notifyRole(
       UserRole.DISPATCHER,
       'Новый заказ',
@@ -261,7 +284,7 @@ export class OrdersService {
         base: 0,
         surcharge: deliveryFeeAmount,
         total: deliveryFeeAmount,
-        distanceKm,
+        distanceKm: distanceKm,
       },
     };
   }
@@ -286,8 +309,9 @@ export class OrdersService {
   }
 
   async getOrders(status?: OrderStatus) {
+    const whereClause = status ? { status: status } : undefined;
     return this.prisma.order.findMany({
-      where: status ? { status } : undefined,
+      where: whereClause,
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
@@ -308,6 +332,9 @@ export class OrdersService {
             assignedAt: true,
             courier: { select: { id: true, name: true } },
           },
+        },
+        payment: {
+          select: { method: true, status: true },
         },
       },
     });
@@ -337,20 +364,32 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
 
+    // клиент может смотреть только свои заказы
     if (role !== UserRole.DISPATCHER && order.clientId !== userId) {
       throw new ForbiddenException('FORBIDDEN');
     }
 
     const settings = await this.settingsService.getRestaurantSettings();
-    const deliveryFee = this.getDeliveryFeeBreakdown(order, settings);
 
-    return {
-      ...order,
-      deliveryFee,
+    // вычисляем breakdown стоимости доставки
+    let surcharge = 0;
+    if (order.deliveryType === DeliveryType.DELIVERY) {
+      if (order.distanceKm != null && order.distanceKm > settings.freeDeliveryRadiusKm) {
+        surcharge = settings.longDistanceFeeKzt ?? 0;
+      }
+    }
+
+    const deliveryFee = {
+      base: 0,
+      surcharge: surcharge,
+      total: order.deliveryFeeAmount,
+      distanceKm: order.distanceKm ?? null,
     };
+
+    return { ...order, deliveryFee: deliveryFee };
   }
 
-  async updateStatus(orderId: string, userId: string, role: UserRole, dto: UpdateOrderStatusDto) {
+  async updateStatus(orderId: string, userId: string, role: UserRole, dto: any) {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
       include: { delivery: true },
@@ -360,28 +399,74 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
 
+    // клиент может менять только свой заказ
     if (role === UserRole.CLIENT && order.clientId !== userId) {
       throw new ForbiddenException('FORBIDDEN');
     }
 
+    // курьер должен быть назначен на этот заказ
     if (role === UserRole.COURIER) {
       if (!order.delivery || order.delivery.courierId !== userId) {
         throw new ForbiddenException('FORBIDDEN');
       }
     }
 
-    this.orderFlow.assertCanChangeStatus(role, order.status, dto.status);
-    this.orderFlow.assertTransitions(order, dto.status, !!order.delivery);
-
-    if (
-      order.scheduledFor &&
-      (dto.status === OrderStatus.PICKED_UP ||
-        dto.status === OrderStatus.ON_THE_WAY ||
-        dto.status === OrderStatus.DELIVERED)
-    ) {
-      this.orderFlow.assertPreorderReady(order);
+    // нельзя менять статус завершенного/отмененного заказа
+    if (order.status === OrderStatus.CANCELED || order.status === OrderStatus.DELIVERED) {
+      throw new BadRequestException('FORBIDDEN_STATUS_CHANGE');
     }
 
+    // проверяем права роли на конкретный статус
+    if (role === UserRole.DISPATCHER) {
+      const allowedForDispatcher = [OrderStatus.CONFIRMED, OrderStatus.COOKING, OrderStatus.CANCELED];
+      let ok = false;
+      for (const s of allowedForDispatcher) {
+        if (s === dto.status) { ok = true; break; }
+      }
+      if (!ok) throw new ForbiddenException('FORBIDDEN_STATUS_CHANGE');
+    }
+
+    if (role === UserRole.COURIER) {
+      const allowedForCourier = [OrderStatus.PICKED_UP, OrderStatus.ON_THE_WAY, OrderStatus.DELIVERED];
+      let ok = false;
+      for (const s of allowedForCourier) {
+        if (s === dto.status) { ok = true; break; }
+      }
+      if (!ok) throw new ForbiddenException('FORBIDDEN_STATUS_CHANGE');
+    }
+
+    if (role === UserRole.CLIENT) {
+      if (dto.status !== OrderStatus.CANCELED) {
+        throw new ForbiddenException('FORBIDDEN_STATUS_CHANGE');
+      }
+    }
+
+    // проверяем переходы между статусами
+    if (dto.status === OrderStatus.DELIVERED && !order.delivery) {
+      throw new BadRequestException('DELIVERY_REQUIRED');
+    }
+
+    if (dto.status === OrderStatus.ON_THE_WAY && order.status !== OrderStatus.PICKED_UP) {
+      throw new BadRequestException('FORBIDDEN_STATUS_CHANGE');
+    }
+
+    // если это предзаказ - проверяем что время пришло
+    if (order.scheduledFor != null) {
+      const isLateStatus =
+        dto.status === OrderStatus.PICKED_UP ||
+        dto.status === OrderStatus.ON_THE_WAY ||
+        dto.status === OrderStatus.DELIVERED;
+
+      if (isLateStatus) {
+        const now = DateTime.now().setZone(TIME_ZONE);
+        const scheduled = DateTime.fromJSDate(order.scheduledFor).setZone(TIME_ZONE);
+        if (now < scheduled) {
+          throw new BadRequestException('PREORDER_NOT_READY');
+        }
+      }
+    }
+
+    // обновляем статус заказа
     const updated = await this.prisma.order.update({
       where: { id: orderId },
       data: {
@@ -390,36 +475,39 @@ export class OrdersService {
       },
     });
 
+    // обновляем статус платежа
     if (dto.status === OrderStatus.DELIVERED) {
       await this.prisma.payment.updateMany({
-        where: { orderId },
+        where: { orderId: orderId },
         data: { status: PaymentStatus.PAID },
       });
       await this.audit.log({
         actorUserId: userId,
         action: AuditAction.PAYMENT_STATUS_CHANGED,
-        orderId,
+        orderId: orderId,
         data: { paymentStatus: PaymentStatus.PAID },
       });
     } else if (dto.status === OrderStatus.CANCELED) {
       await this.prisma.payment.updateMany({
-        where: { orderId },
+        where: { orderId: orderId },
         data: { status: PaymentStatus.REFUNDED },
       });
       await this.audit.log({
         actorUserId: userId,
         action: AuditAction.PAYMENT_STATUS_CHANGED,
-        orderId,
+        orderId: orderId,
         data: { paymentStatus: PaymentStatus.REFUNDED },
       });
     }
 
+    const auditAction =
+      dto.status === OrderStatus.CANCELED
+        ? AuditAction.ORDER_CANCELED
+        : AuditAction.ORDER_STATUS_CHANGED;
+
     await this.audit.log({
       actorUserId: userId,
-      action:
-        dto.status === OrderStatus.CANCELED
-          ? AuditAction.ORDER_CANCELED
-          : AuditAction.ORDER_STATUS_CHANGED,
+      action: auditAction,
       orderId: order.id,
       data: {
         fromStatus: order.status,
@@ -428,6 +516,7 @@ export class OrdersService {
       },
     });
 
+    // шлем ws событие
     this.wsEvents.emitOrderStatusChanged({
       orderId: updated.id,
       status: updated.status,
@@ -435,6 +524,7 @@ export class OrdersService {
       courierId: order.delivery?.courierId ?? null,
     });
 
+    // push уведомления клиенту
     if (
       dto.status === OrderStatus.ON_THE_WAY ||
       dto.status === OrderStatus.DELIVERED ||
@@ -447,6 +537,7 @@ export class OrdersService {
       );
     }
 
+    // push уведомления диспетчерам
     if (dto.status === OrderStatus.DELIVERED || dto.status === OrderStatus.CANCELED) {
       await this.notifications.notifyRole(
         UserRole.DISPATCHER,
@@ -455,63 +546,29 @@ export class OrdersService {
       );
     }
 
+    console.log('[ORDER] status changed:', orderId, '->', dto.status);
+
     return updated;
   }
 
   async createReview(orderId: string, userId: string, rating: number, comment?: string) {
+    // проверяем что заказ существует и принадлежит пользователю
     const order = await this.prisma.order.findUnique({ where: { id: orderId } });
-    if (!order) throw new NotFoundException('Order not found');
-    if (order.clientId !== userId) throw new ForbiddenException('FORBIDDEN');
-    if (order.status !== OrderStatus.DELIVERED) throw new BadRequestException('ORDER_NOT_DELIVERED');
-    return this.prisma.orderReview.upsert({
-      where: { orderId },
-      update: { rating, comment },
-      create: { orderId, rating, comment },
-    });
-  }
-
-  private isWithinWorkingHours(date: DateTime, openMinutes: number, closeMinutes: number) {
-    const minutes = date.hour * 60 + date.minute;
-    return minutes >= openMinutes && minutes <= closeMinutes;
-  }
-
-  private getDistanceKm(lat1: number, lng1: number, lat2: number, lng2: number) {
-    const toRad = (value: number) => (value * Math.PI) / 180;
-    const R = 6371;
-    const dLat = toRad(lat2 - lat1);
-    const dLng = toRad(lng2 - lng1);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-      Math.sin(dLng / 2) * Math.sin(dLng / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }
-
-  private getDeliveryFeeBreakdown(
-    order: { deliveryType: DeliveryType; distanceKm: number | null; deliveryFeeAmount: number },
-    settings: { longDistanceFeeKzt: number; freeDeliveryRadiusKm: number },
-  ) {
-    if (order.deliveryType !== DeliveryType.DELIVERY) {
-      return {
-        base: 0,
-        surcharge: 0,
-        total: 0,
-        distanceKm: order.distanceKm ?? null,
-      };
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+    if (order.clientId !== userId) {
+      throw new ForbiddenException('FORBIDDEN');
+    }
+    if (order.status !== OrderStatus.DELIVERED) {
+      throw new BadRequestException('ORDER_NOT_DELIVERED');
     }
 
-    const surcharge =
-      order.distanceKm != null && order.distanceKm > settings.freeDeliveryRadiusKm
-        ? settings.longDistanceFeeKzt ?? 0
-        : 0;
-
-    return {
-      base: 0,
-      surcharge,
-      total: order.deliveryFeeAmount,
-      distanceKm: order.distanceKm ?? null,
-    };
+    // upsert - обновляем если уже есть, создаем если нет
+    return this.prisma.orderReview.upsert({
+      where: { orderId: orderId },
+      update: { rating: rating, comment: comment },
+      create: { orderId: orderId, rating: rating, comment: comment },
+    });
   }
 }
-

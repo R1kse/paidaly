@@ -1,0 +1,50 @@
+/* ── LoginPage ── */
+.login-form {
+  display: grid;
+  gap: 14px;
+}
+
+.login-error {
+  background: #FBE4E4;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #8A2E2E;
+  font-weight: 700;
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0;
+}
+
+.login-divider__line {
+  flex: 1;
+  height: 1px;
+  background: #E3ECE1;
+}
+
+.login-divider__text {
+  font-size: 12px;
+  color: #6B8F71;
+  font-weight: 700;
+}
+
+.login-google-btn {
+  width: 100%;
+  padding: 12px 0;
+  border-radius: 14px;
+  border: 1.5px solid #E3ECE1;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: #1B3A2D;
+  cursor: pointer;
+}

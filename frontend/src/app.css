@@ -1,0 +1,196 @@
+/* ── ClientShell ── */
+.client-shell {
+  min-height: 100vh;
+  background: #F7FAF5;
+  font-family: 'Nunito', sans-serif;
+}
+
+.client-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #fff;
+  border-bottom: 1.5px solid #E3ECE1;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+}
+
+.client-header__logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  margin-right: 28px;
+  flex-shrink: 0;
+}
+
+.client-header__logo-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #3A9E5F, #8BC34A);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+}
+
+.client-header__logo-name {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 17px;
+  color: #1B3A2D;
+  letter-spacing: -0.01em;
+}
+
+.client-header__nav {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+}
+
+.client-header__right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.client-header__icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #F7FAF5;
+  border: 1.5px solid #E3ECE1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  color: #1B3A2D;
+  padding: 0;
+  position: relative;
+}
+
+.client-header__cart-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #E07070;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+}
+
+.client-header__avatar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.client-header__avatar-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8BC34A, #3A9E5F);
+  border: none;
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  font-family: 'Nunito', sans-serif;
+}
+
+.client-shell__content {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 24px 24px 64px;
+}
+
+/* ── AppShell ── */
+.app-shell-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.app-shell-logo__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #3A9E5F, #8BC34A);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+/* ── NavLink active style set inline via function — kept as-is ── */
+
+.client-nav-link {
+  font-size: 14px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 999px;
+  text-decoration: none;
+  color: #1B3A2D;
+  background: transparent;
+  transition: all 0.15s;
+  font-family: 'Nunito', sans-serif;
+}
+
+.client-nav-link--active {
+  color: #3A9E5F;
+  background: rgba(58, 158, 95, 0.1);
+}
+
+.app-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: #F7FAF5;
+}
+
+.app-loading__text {
+  color: #6B8F71;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 600;
+}
+
+.mobile-tab-icon-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.mobile-tab-badge {
+  position: absolute;
+  top: -4px;
+  right: -8px;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background: #E07070;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #fff;
+  padding: 0 2px;
+}

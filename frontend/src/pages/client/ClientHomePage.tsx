@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../../api/client';
 import { useCartStore } from '../../store/cart';
 import { useToastStore } from '../../store/toast';
+import './client-home.css';
 
 const CATEGORIES = [
   { e: '🥗', t: 'Салаты',  c: '#E0F1E6', type: 'SALAD' },
@@ -71,56 +72,33 @@ export default function ClientHomePage() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
       {/* ── Hero banner ── */}
-      <div style={{
-        margin: '0 0 20px',
-        borderRadius: 20, padding: '20px 22px',
-        background: 'linear-gradient(135deg, #3A9E5F, #8BC34A)',
-        color: '#fff', position: 'relative', overflow: 'hidden',
-      }}>
-        <div style={{
-          position: 'absolute', right: -30, top: -20, width: 140, height: 140, borderRadius: '50%',
-          background: 'rgba(255,255,255,.12)',
-        }} />
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, opacity: 0.85 }}>МЕНЮ НЕДЕЛИ</div>
-        <div style={{ fontFamily: 'Unbounded, sans-serif', fontSize: 20, fontWeight: 700, marginTop: 6, lineHeight: 1.2 }}>
+      <div className="home-hero">
+        <div className="home-hero__circle" />
+        <div className="home-hero__label">МЕНЮ НЕДЕЛИ</div>
+        <div className="home-hero__title">
           −20% на программу<br/>«Детокс»
         </div>
-        <button
-          onClick={() => navigate('/client/menu')}
-          style={{
-            marginTop: 12, background: '#fff', color: '#1B3A2D', border: 0,
-            borderRadius: 10, padding: '8px 16px', fontWeight: 800, fontSize: 13,
-            fontFamily: 'Nunito, sans-serif', cursor: 'pointer',
-          }}
-        >
+        <button className="home-hero__btn" onClick={() => navigate('/client/menu')}>
           Смотреть →
         </button>
       </div>
 
       {/* ── Categories ── */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <h3 style={{ margin: 0, fontSize: 17 }}>Категории</h3>
-          <span
-            onClick={() => navigate('/client/menu')}
-            style={{ fontSize: 13, color: '#3A9E5F', fontWeight: 800, cursor: 'pointer' }}
-          >Все →</span>
+      <div className="home-categories">
+        <div className="home-section-header">
+          <h3>Категории</h3>
+          <span className="home-section-header__link" onClick={() => navigate('/client/menu')}>Все →</span>
         </div>
-        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}
-             className="no-sb">
+        <div className="home-categories__scroll no-sb">
           {CATEGORIES.map((cat, i) => (
             <div
               key={cat.type}
               onClick={() => navigate('/client/menu')}
-              style={{
-                minWidth: 80, background: cat.c, borderRadius: 16, padding: '14px 10px',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-                border: i === 0 ? '2px solid #3A9E5F' : '2px solid transparent',
-                cursor: 'pointer', flexShrink: 0,
-              }}
+              className={`home-category-card ${i === 0 ? 'home-category-card--active' : 'home-category-card--inactive'}`}
+              style={{ background: cat.c }}
             >
-              <div style={{ fontSize: 28 }}>{cat.e}</div>
-              <div style={{ fontSize: 11, fontWeight: 800, color: '#1B3A2D' }}>{cat.t}</div>
+              <div className="home-category-card__emoji">{cat.e}</div>
+              <div className="home-category-card__title">{cat.t}</div>
             </div>
           ))}
         </div>
@@ -128,41 +106,23 @@ export default function ClientHomePage() {
 
       {/* ── Popular today ── */}
       {popular.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h3 style={{ margin: 0, fontSize: 17 }}>Популярное сегодня</h3>
-            <span
-              onClick={() => navigate('/client/menu')}
-              style={{ fontSize: 13, color: '#3A9E5F', fontWeight: 800, cursor: 'pointer' }}
-            >Все →</span>
+        <div className="home-popular">
+          <div className="home-section-header">
+            <h3>Популярное сегодня</h3>
+            <span className="home-section-header__link" onClick={() => navigate('/client/menu')}>Все →</span>
           </div>
-          <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 4 }} className="no-sb">
+          <div className="home-popular__scroll no-sb">
             {popular.map((item: any) => (
-              <div key={item.id} style={{
-                minWidth: 190, background: '#fff', borderRadius: 20, overflow: 'hidden',
-                boxShadow: '0 8px 20px -14px rgba(27,58,45,.22)', flexShrink: 0,
-              }}>
-                <div style={{
-                  height: 130, background: dishBg(item.dishType),
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 52, position: 'relative',
-                }}>
+              <div key={item.id} className="home-popular-card">
+                <div className="home-popular-card__image" style={{ background: dishBg(item.dishType) }}>
                   {dishEmoji(item.dishType)}
                 </div>
-                <div style={{ padding: 12 }}>
-                  <div style={{ fontWeight: 800, fontSize: 13, lineHeight: 1.2, color: '#1B3A2D' }}>{item.title}</div>
-                  <div style={{ fontSize: 11, color: '#6B8F71', marginTop: 2 }}>{item.description}</div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
-                    <span style={{ fontWeight: 800, fontSize: 14 }}>{item.price} ₸</span>
-                    <button
-                      onClick={() => addToCart(item)}
-                      style={{
-                        width: 30, height: 30, borderRadius: 10,
-                        background: 'linear-gradient(135deg,#3A9E5F,#8BC34A)',
-                        border: 0, color: '#fff', display: 'grid', placeItems: 'center',
-                        fontSize: 18, cursor: 'pointer',
-                      }}
-                    >+</button>
+                <div className="home-popular-card__body">
+                  <div className="home-popular-card__title">{item.title}</div>
+                  <div className="home-popular-card__desc">{item.description}</div>
+                  <div className="home-popular-card__footer">
+                    <span className="home-popular-card__price">{item.price} ₸</span>
+                    <button className="home-popular-card__add-btn" onClick={() => addToCart(item)}>+</button>
                   </div>
                 </div>
               </div>
@@ -173,36 +133,21 @@ export default function ClientHomePage() {
 
       {/* ── Новинки (list) ── */}
       {newest.length > 0 && (
-        <div>
-          <h3 style={{ margin: '0 0 12px', fontSize: 17 }}>Новинки</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div className="home-newest">
+          <h3 className="home-newest__heading">Новинки</h3>
+          <div className="home-newest__list">
             {newest.map((item: any) => (
-              <div key={item.id} style={{
-                display: 'flex', gap: 12, background: '#fff', borderRadius: 18,
-                padding: 12, boxShadow: '0 4px 14px -12px rgba(27,58,45,.2)', alignItems: 'center',
-              }}>
-                <div style={{
-                  width: 70, height: 70, borderRadius: 14, overflow: 'hidden', flexShrink: 0,
-                  background: dishBg(item.dishType),
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32,
-                }}>
+              <div key={item.id} className="home-newest-card">
+                <div className="home-newest-card__image" style={{ background: dishBg(item.dishType) }}>
                   {dishEmoji(item.dishType)}
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 800, fontSize: 14, color: '#1B3A2D' }}>{item.title}</div>
-                  <div style={{ fontSize: 11, color: '#6B8F71', marginTop: 2 }}>{item.description}</div>
+                <div className="home-newest-card__info">
+                  <div className="home-newest-card__title">{item.title}</div>
+                  <div className="home-newest-card__desc">{item.description}</div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
-                  <span style={{ fontWeight: 800, fontSize: 14 }}>{item.price} ₸</span>
-                  <button
-                    onClick={() => addToCart(item)}
-                    style={{
-                      width: 30, height: 30, borderRadius: 10,
-                      background: 'linear-gradient(135deg,#3A9E5F,#8BC34A)',
-                      border: 0, color: '#fff', display: 'grid', placeItems: 'center',
-                      fontSize: 18, cursor: 'pointer',
-                    }}
-                  >+</button>
+                <div className="home-newest-card__right">
+                  <span className="home-newest-card__price">{item.price} ₸</span>
+                  <button className="home-newest-card__add-btn" onClick={() => addToCart(item)}>+</button>
                 </div>
               </div>
             ))}

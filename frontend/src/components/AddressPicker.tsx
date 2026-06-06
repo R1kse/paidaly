@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
 import { useAddressStore, SavedAddress } from '../store/address';
+import './address-picker.css';
 
 type NominatimResult = {
   place_id: number;
@@ -10,7 +11,6 @@ type NominatimResult = {
   lon: string;
 };
 
-// Almaty bounding box: west, south, east, north
 const ALMATY_VIEWBOX = '76.65,43.10,77.25,43.55';
 
 async function searchAlmaty(q: string): Promise<NominatimResult[]> {
@@ -138,82 +138,47 @@ export default function AddressPicker() {
     });
   };
 
-  const inp: React.CSSProperties = {
-    padding: '9px 12px', borderRadius: 10, border: '1.5px solid #E3ECE1',
-    fontSize: 13, fontFamily: 'Nunito, sans-serif', outline: 'none',
-    color: '#1B3A2D', width: '100%', boxSizing: 'border-box', background: '#fff',
-  };
-
   return (
-    <div ref={containerRef} style={{ position: 'relative' }}>
+    <div ref={containerRef} className="addr-wrap">
 
       {/* ── Pill ── */}
-      <div
-        onClick={() => setOpen((v) => !v)}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          padding: '6px 12px', borderRadius: 999,
-          border: '1.5px solid #E3ECE1', background: '#F7FAF5',
-          fontSize: 13, fontWeight: 700,
-          color: active ? '#1B3A2D' : '#3A9E5F',
-          cursor: 'pointer', whiteSpace: 'nowrap', userSelect: 'none',
-          maxWidth: 220,
-        }}
-      >
-        <span style={{ color: '#3A9E5F', fontSize: 14, flexShrink: 0 }}>📍</span>
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+      <div onClick={() => setOpen((v) => !v)} className="addr-pill">
+        <span className="addr-pill__icon">📍</span>
+        <span className="addr-pill__text">
           {active ? active.addressText : 'Добавить адрес'}
         </span>
-        <span style={{ fontSize: 10, color: '#6B8F71', flexShrink: 0 }}>▾</span>
+        <span className="addr-pill__arrow">▾</span>
       </div>
 
       {/* ── Dropdown ── */}
       {open && (
-        <div style={{
-          position: 'absolute', top: 'calc(100% + 8px)', left: 0,
-          width: 320, background: '#fff', borderRadius: 18,
-          boxShadow: '0 12px 32px -8px rgba(27,58,45,0.18)',
-          border: '1.5px solid #E3ECE1', zIndex: 300,
-        }}>
+        <div className="addr-dropdown">
 
           {/* Saved list */}
           {addresses.length > 0 && (
-            <div style={{ padding: '8px 0' }}>
+            <div className="addr-dropdown__list">
               {addresses.map((addr) => (
                 <div
                   key={addr.id}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    padding: '10px 16px',
-                    background: active?.id === addr.id ? '#EEF6EC' : 'transparent',
-                  }}
+                  className={`addr-dropdown__item ${active?.id === addr.id ? 'addr-dropdown__item--active' : ''}`}
                 >
                   {/* Select */}
                   <div
                     onClick={() => { setActive(addr); setOpen(false); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0, cursor: 'pointer' }}
+                    className="addr-dropdown__item-select"
                   >
-                    <div style={{
-                      width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-                      background: active?.id === addr.id ? '#3A9E5F' : '#EEF6EC',
-                      display: 'grid', placeItems: 'center', fontSize: 14,
-                    }}>📍</div>
+                    <div className={`addr-dropdown__item-icon ${active?.id === addr.id ? 'addr-dropdown__item-icon--active' : 'addr-dropdown__item-icon--inactive'}`}>
+                      📍
+                    </div>
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 800, fontSize: 13, color: '#1B3A2D' }}>
-                        {addr.label}
-                      </div>
-                      <div style={{
-                        fontSize: 11, color: '#6B8F71',
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                      }}>
-                        {addr.addressText}
-                      </div>
+                      <div className="addr-dropdown__item-label">{addr.label}</div>
+                      <div className="addr-dropdown__item-addr">{addr.addressText}</div>
                     </div>
                   </div>
 
                   {/* Active check */}
                   {active?.id === addr.id && (
-                    <span style={{ color: '#3A9E5F', fontWeight: 800, fontSize: 16, flexShrink: 0 }}>✓</span>
+                    <span className="addr-dropdown__item-check">✓</span>
                   )}
 
                   {/* Delete */}
@@ -221,82 +186,61 @@ export default function AddressPicker() {
                     onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(addr.id); }}
                     disabled={deleteMutation.isPending}
                     title="Удалить"
-                    style={{
-                      width: 26, height: 26, borderRadius: 8, flexShrink: 0,
-                      background: '#FBE4E4', border: 'none',
-                      display: 'grid', placeItems: 'center',
-                      cursor: 'pointer', fontSize: 13, color: '#C0392B',
-                      opacity: deleteMutation.isPending ? 0.5 : 1,
-                    }}
+                    className="addr-dropdown__delete-btn"
+                    style={{ opacity: deleteMutation.isPending ? 0.5 : 1 }}
                   >
                     ✕
                   </button>
                 </div>
               ))}
-              <div style={{ height: 1, background: '#EEF6EC', margin: '4px 0' }} />
+              <div className="addr-dropdown__divider" />
             </div>
           )}
 
           {/* Add form / add button */}
           {adding ? (
-            <div style={{ padding: '14px 16px', display: 'grid', gap: 10 }}>
-              <div style={{ fontWeight: 800, fontSize: 13, color: '#1B3A2D' }}>Новый адрес</div>
+            <div className="addr-form">
+              <div className="addr-form__title">Новый адрес</div>
 
               <input
                 autoFocus
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
                 placeholder="Название (Дом, Работа…)"
-                style={inp}
+                className="addr-form__input"
               />
 
               {/* Search with suggestions */}
-              <div style={{ position: 'relative' }}>
-                <div style={{ position: 'relative' }}>
+              <div className="addr-search-wrap">
+                <div className="addr-search-inner">
                   <input
                     value={query}
                     onChange={(e) => { setQuery(e.target.value); setSelected(null); }}
                     onFocus={() => { if (suggestions.length > 0) setShowSugg(true); }}
                     placeholder="Начните вводить улицу…"
-                    style={{ ...inp, borderColor: selected ? '#3A9E5F' : '#E3ECE1', paddingRight: 32 }}
+                    className={`addr-form__input ${selected ? 'addr-form__input--selected' : ''}`}
+                    style={{ paddingRight: 32 }}
                   />
                   {searching && (
-                    <span style={{
-                      position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
-                      fontSize: 11, color: '#6B8F71', pointerEvents: 'none',
-                    }}>⏳</span>
+                    <span className="addr-search-loader">⏳</span>
                   )}
                   {selected && (
                     <button
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => { setSelected(null); setQuery(''); }}
-                      style={{
-                        position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
-                        background: 'none', border: 'none', cursor: 'pointer',
-                        color: '#6B8F71', fontSize: 14, padding: 2,
-                      }}
+                      className="addr-search-clear"
                     >✕</button>
                   )}
                 </div>
 
                 {/* Suggestions list */}
                 {showSugg && suggestions.length > 0 && (
-                  <div style={{
-                    position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
-                    background: '#fff', borderRadius: 12,
-                    border: '1.5px solid #E3ECE1',
-                    boxShadow: '0 8px 20px -8px rgba(27,58,45,0.15)',
-                    zIndex: 500, maxHeight: 220, overflowY: 'auto',
-                  }}>
+                  <div className="addr-suggestions">
                     {suggestions.map((s) => (
                       <div
                         key={s.place_id}
                         onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); pickSuggestion(s); }}
-                        style={{
-                          padding: '9px 12px', cursor: 'pointer', fontSize: 12,
-                          color: '#1B3A2D', lineHeight: 1.4,
-                          borderBottom: '1px solid #F0F6EE',
-                        }}
+                        className="addr-suggestion-item"
                         onMouseEnter={(e) => (e.currentTarget.style.background = '#EEF6EC')}
                         onMouseLeave={(e) => (e.currentTarget.style.background = '')}
                       >
@@ -310,56 +254,31 @@ export default function AddressPicker() {
 
               {/* Selected badge */}
               {selected && (
-                <div style={{
-                  fontSize: 11, color: '#3A9E5F', fontWeight: 700,
-                  padding: '6px 10px', background: '#EEF6EC', borderRadius: 8,
-                }}>
+                <div className="addr-selected-badge">
                   ✓ {shortName(selected.display_name)}
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div className="addr-form__buttons">
                 <button
                   onClick={() => { setAdding(false); setLabel(''); setQuery(''); setSelected(null); setSuggestions([]); setShowSugg(false); }}
-                  style={{
-                    flex: 1, padding: '8px 0', borderRadius: 10,
-                    background: '#EEF6EC', border: 'none',
-                    fontWeight: 800, fontSize: 12, color: '#6B8F71',
-                    fontFamily: 'Nunito, sans-serif', cursor: 'pointer',
-                  }}
+                  className="addr-form__cancel-btn"
                 >
                   Отмена
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={addMutation.isPending || !label.trim() || !selected}
-                  style={{
-                    flex: 2, padding: '8px 0', borderRadius: 10,
-                    background: 'linear-gradient(135deg, #3A9E5F, #8BC34A)', border: 'none',
-                    fontWeight: 800, fontSize: 12, color: '#fff',
-                    fontFamily: 'Nunito, sans-serif', cursor: 'pointer',
-                    opacity: (!label.trim() || !selected || addMutation.isPending) ? 0.45 : 1,
-                  }}
+                  className="addr-form__save-btn"
                 >
                   {addMutation.isPending ? 'Сохраняем...' : 'Сохранить'}
                 </button>
               </div>
             </div>
           ) : (
-            <div
-              onClick={() => setAdding(true)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                padding: '12px 16px', cursor: 'pointer',
-              }}
-            >
-              <div style={{
-                width: 30, height: 30, borderRadius: 8, background: '#EEF6EC',
-                display: 'grid', placeItems: 'center', fontSize: 16, flexShrink: 0,
-              }}>＋</div>
-              <span style={{ fontWeight: 800, fontSize: 13, color: '#3A9E5F' }}>
-                Добавить адрес
-              </span>
+            <div onClick={() => setAdding(true)} className="addr-add-row">
+              <div className="addr-add-row__icon">＋</div>
+              <span className="addr-add-row__label">Добавить адрес</span>
             </div>
           )}
         </div>

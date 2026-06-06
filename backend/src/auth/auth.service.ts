@@ -1,86 +1,72 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
-import { UpdateProfileDto } from './dto/update-profile.dto';
+import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 
-type AuthResponse = {
-  accessToken: string;
-  user: {
-    id: string;
-    role: string;
-    name: string;
-    email: string;
-    phone: string | null;
-  };
-};
-
+// сервис для авторизации
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly usersService: UsersService,
-    private readonly jwtService: JwtService,
+    private usersService: UsersService,
+    private jwtService: JwtService,
+    private prisma: PrismaService,
   ) {}
 
+  // проверяем пользователя по email и паролю
   async validateUser(email: string, password: string) {
-    const user = await this.usersService.findByEmail(email);
-    if (!user || !user.passwordHash) {
+    const user = await this.prisma.user.findUnique({ where: { email: email } });
+    if (!user) {
+      throw new UnauthorizedException('Invalid email or password');
+    }
+    if (!user.passwordHash) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const isValid = await bcrypt.compare(password, user.passwordHash);
-    if (!isValid) {
+    const passwordOk = await bcrypt.compare(password, user.passwordHash);
+    if (passwordOk === false) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
     return user;
   }
 
-  async login(dto: LoginDto): Promise<AuthResponse> {
+  async login(dto: any) {
     const user = await this.validateUser(dto.email, dto.password);
-    return this.issueToken(user);
+    const token = await this.makeToken(user);
+    return token;
   }
 
-  async register(dto: RegisterDto): Promise<AuthResponse> {
-    const user = await this.usersService.createClient(dto);
-    return this.issueToken(user);
+  async register(dto: any) {
+    const newUser = await this.usersService.createClient(dto);
+    const result = await this.makeToken(newUser);
+    return result;
   }
 
-  async googleLogin(googleUser: {
-    id: string;
-    role: string;
-    name: string;
-    email: string;
-    phone?: string | null;
-  }): Promise<AuthResponse> {
-    return this.issueToken(googleUser);
+  async googleLogin(googleUser: any) {
+    const result = await this.makeToken(googleUser);
+    return result;
   }
 
-  async updateProfile(userId: string, dto: UpdateProfileDto) {
+  async updateProfile(userId: string, dto: any) {
     const updated = await this.usersService.updateProfile(userId, dto);
-    return {
+    const data = {
       id: updated.id,
       role: updated.role,
       name: updated.name,
       email: updated.email,
       phone: updated.phone ?? null,
     };
+    return data;
   }
 
-  private async issueToken(user: {
-    id: string;
-    role: string;
-    name: string;
-    email: string;
-    phone?: string | null;
-  }): Promise<AuthResponse> {
+  // генерируем jwt токен для пользователя
+  private async makeToken(user: any) {
     const payload = { sub: user.id, role: user.role };
-
     const accessToken = await this.jwtService.signAsync(payload);
+
     return {
-      accessToken,
+      accessToken: accessToken,
       user: {
         id: user.id,
         role: user.role,

@@ -1,18 +1,20 @@
-﻿import { Injectable } from '@nestjs/common';
-import { AuditAction, Prisma } from '@prisma/client';
+import { Injectable } from '@nestjs/common';
+import { AuditAction } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class AuditService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) {}
 
-  log(input: {
+  async log(input: {
     actorUserId: string;
     action: AuditAction;
     orderId?: string;
-    data?: Prisma.InputJsonValue;
+    data?: any;
   }) {
-    return this.prisma.auditLog.create({
+    console.log('[AUDIT]', input.action, 'by', input.actorUserId);
+
+    const record = await this.prisma.auditLog.create({
       data: {
         actorUserId: input.actorUserId,
         action: input.action,
@@ -20,24 +22,34 @@ export class AuditService {
         data: input.data ?? undefined,
       },
     });
+
+    return record;
   }
 
   async list(orderId?: string, page = 1, limit = 50) {
-    const take = Math.min(limit, 100);
+    // максимум 100 записей на страницу
+    let take = limit;
+    if (take > 100) take = 100;
     const skip = (page - 1) * take;
 
-    const [items, total] = await this.prisma.$transaction([
-      this.prisma.auditLog.findMany({
-        where: orderId ? { orderId } : undefined,
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take,
-      }),
-      this.prisma.auditLog.count({
-        where: orderId ? { orderId } : undefined,
-      }),
-    ]);
+    const whereClause = orderId ? { orderId: orderId } : undefined;
 
-    return { items, total, page, limit: take };
+    const items = await this.prisma.auditLog.findMany({
+      where: whereClause,
+      orderBy: { createdAt: 'desc' },
+      skip: skip,
+      take: take,
+    });
+
+    const total = await this.prisma.auditLog.count({
+      where: whereClause,
+    });
+
+    return {
+      items: items,
+      total: total,
+      page: page,
+      limit: take,
+    };
   }
 }

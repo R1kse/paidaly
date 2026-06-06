@@ -3,9 +3,10 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, VerifyCallback } from 'passport-google-oauth20';
 import { UsersService } from '../users/users.service';
 
+// стратегия для входа через гугл аккаунт
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
-  constructor(private readonly usersService: UsersService) {
+  constructor(private usersService: UsersService) {
     super({
       clientID: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
@@ -20,13 +21,22 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     profile: any,
     done: VerifyCallback,
   ) {
-    const email: string = profile.emails?.[0]?.value;
-    const name: string =
-      profile.displayName ||
-      `${profile.name?.givenName ?? ''} ${profile.name?.familyName ?? ''}`.trim();
-    const googleId: string = profile.id;
+    console.log('[GOOGLE] login attempt, profile id:', profile.id);
+    const email = profile.emails?.[0]?.value;
+    const googleId = profile.id;
 
-    const user = await this.usersService.findOrCreateGoogleUser({ googleId, email, name });
+    let name = profile.displayName;
+    if (!name) {
+      const firstName = profile.name?.givenName ?? '';
+      const lastName = profile.name?.familyName ?? '';
+      name = (firstName + ' ' + lastName).trim();
+    }
+    const user = await this.usersService.findOrCreateGoogleUser({
+      googleId: googleId,
+      email: email,
+      name: name,
+    });
+
     done(null, user);
   }
 }

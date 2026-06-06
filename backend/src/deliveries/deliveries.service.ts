@@ -3,9 +3,10 @@ import { AuditAction, OrderStatus, UserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { WsEventsService } from '../websocket/ws-events.service';
-import { OrderFlowService } from '../orders/flow/order-flow.service';
 import { AuditService } from '../audit/audit.service';
+import { DateTime } from 'luxon';
 
+// статусы активных заказов
 const ACTIVE_STATUSES: OrderStatus[] = [
   OrderStatus.CONFIRMED,
   OrderStatus.COOKING,
@@ -16,37 +17,46 @@ const ACTIVE_STATUSES: OrderStatus[] = [
 @Injectable()
 export class DeliveriesService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly notifications: NotificationsService,
-    private readonly wsEvents: WsEventsService,
-    private readonly orderFlow: OrderFlowService,
-    private readonly audit: AuditService,
+    private prisma: PrismaService,
+    private notifications: NotificationsService,
+    private wsEvents: WsEventsService,
+    private audit: AuditService,
   ) {}
 
   async assignCourier(orderId: string, courierId: string, actorUserId: string) {
+    // проверяем что заказ существует
     const order = await this.prisma.order.findUnique({ where: { id: orderId } });
     if (!order) {
       throw new NotFoundException('Order not found');
     }
 
-    if (order.scheduledFor) {
-      this.orderFlow.assertPreorderReady(order);
+    // если это предзаказ - проверяем что время уже пришло
+    if (order.scheduledFor != null) {
+      const now = DateTime.now().setZone('Asia/Almaty');
+      const scheduled = DateTime.fromJSDate(order.scheduledFor).setZone('Asia/Almaty');
+      if (now < scheduled) {
+        throw new BadRequestException('PREORDER_NOT_READY');
+      }
     }
 
+    // проверяем что курьер существует и у него правильная роль
     const courier = await this.prisma.user.findUnique({ where: { id: courierId } });
-    if (!courier || courier.role !== UserRole.COURIER) {
+    if (!courier) {
+      throw new BadRequestException('Invalid courier');
+    }
+    if (courier.role !== UserRole.COURIER) {
       throw new BadRequestException('Invalid courier');
     }
 
     const delivery = await this.prisma.delivery.upsert({
-      where: { orderId },
+      where: { orderId: orderId },
       create: {
-        orderId,
-        courierId,
+        orderId: orderId,
+        courierId: courierId,
         assignedAt: new Date(),
       },
       update: {
-        courierId,
+        courierId: courierId,
         assignedAt: new Date(),
       },
     });
@@ -60,7 +70,7 @@ export class DeliveriesService {
       actorUserId: actorUserId,
       action: AuditAction.COURIER_ASSIGNED,
       orderId: order.id,
-      data: { courierId },
+      data: { courierId: courierId },
     });
 
     await this.notifications.notifyUser(
@@ -74,40 +84,52 @@ export class DeliveriesService {
       `Курьер назначен для вашего заказа #${orderId}`,
     );
 
+    // отправляем событие через websocket
     this.wsEvents.emitOrderStatusChanged({
-      orderId,
+      orderId: orderId,
       status: updatedOrder.status,
       updatedAt: updatedOrder.updatedAt,
       courierId: delivery.courierId,
     });
 
     return {
-      orderId,
+      orderId: orderId,
       courierId: delivery.courierId,
       assignedAt: delivery.assignedAt,
     };
   }
 
   async getCouriersWithLastLocation() {
+    // получаем всех курьеров
     const couriers = await this.prisma.user.findMany({
       where: { role: UserRole.COURIER },
       select: { id: true, name: true, email: true },
       orderBy: { createdAt: 'asc' },
     });
 
+    // получаем последние локации для каждого курьера
     const lastLocations = await this.prisma.courierLocation.findMany({
-      where: { courierId: { in: couriers.map((c) => c.id) } },
+      where: { courierId: { in: couriers.map((c: any) => c.id) } },
       orderBy: { recordedAt: 'desc' },
       distinct: ['courierId'],
       select: { courierId: true, lat: true, lng: true, recordedAt: true },
     });
 
-    const locationMap = new Map(lastLocations.map((loc) => [loc.courierId, loc]));
+    // делаем map для быстрого поиска по courierId
+    const locationMap = new Map<string, any>();
+    for (const loc of lastLocations) {
+      locationMap.set(loc.courierId, loc);
+    }
 
-    return couriers.map((courier) => ({
-      ...courier,
-      lastLocation: locationMap.get(courier.id) ?? null,
-    }));
+    const result = [];
+    for (const courier of couriers) {
+      result.push({
+        ...courier,
+        lastLocation: locationMap.get(courier.id) ?? null,
+      });
+    }
+
+    return result;
   }
 
   async unassignCourier(orderId: string, actorUserId: string) {
@@ -115,6 +137,7 @@ export class DeliveriesService {
       where: { id: orderId },
       include: { delivery: true },
     });
+
     if (!order) {
       throw new NotFoundException('Order not found');
     }
@@ -124,27 +147,30 @@ export class DeliveriesService {
 
     const prevCourierId = order.delivery.courierId;
 
-    await this.prisma.delivery.delete({ where: { orderId } });
+    // удаляем назначение курьера
+    await this.prisma.delivery.delete({ where: { orderId: orderId } });
+
+    // возвращаем заказ в статус CREATED
     await this.prisma.order.update({
       where: { id: orderId },
       data: { status: OrderStatus.CREATED },
     });
 
     await this.audit.log({
-      actorUserId,
+      actorUserId: actorUserId,
       action: AuditAction.COURIER_ASSIGNED,
-      orderId,
-      data: { unassigned: true, prevCourierId },
+      orderId: orderId,
+      data: { unassigned: true, prevCourierId: prevCourierId },
     });
 
     this.wsEvents.emitOrderStatusChanged({
-      orderId,
+      orderId: orderId,
       status: OrderStatus.CREATED,
       updatedAt: new Date(),
       courierId: null,
     });
 
-    return { orderId, unassigned: true };
+    return { orderId: orderId, unassigned: true };
   }
 
   async getCourierActiveDeliveries(userId: string) {
@@ -171,18 +197,24 @@ export class DeliveriesService {
       orderBy: { assignedAt: 'desc' },
     });
 
-    return deliveries.map((delivery) => ({
-      deliveryId: delivery.id,
-      order: delivery.order,
-      assignedAt: delivery.assignedAt,
-    }));
+    const result = [];
+    for (const d of deliveries) {
+      result.push({
+        deliveryId: d.id,
+        order: d.order,
+        assignedAt: d.assignedAt,
+      });
+    }
+
+    return result;
   }
 
   async getLastLocation(courierId: string) {
-    return this.prisma.courierLocation.findFirst({
-      where: { courierId },
+    const loc = await this.prisma.courierLocation.findFirst({
+      where: { courierId: courierId },
       orderBy: { recordedAt: 'desc' },
       select: { courierId: true, lat: true, lng: true, recordedAt: true },
     });
+    return loc;
   }
 }

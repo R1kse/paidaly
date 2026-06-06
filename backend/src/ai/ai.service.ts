@@ -13,11 +13,12 @@ export interface MealPlanRequest {
 
 @Injectable()
 export class AiService {
-  private client: Groq;
+  private client!: Groq;
 
   constructor(private readonly prisma: PrismaService) {
     if (!process.env.GROQ_API_KEY) {
       console.warn('[AiService] GROQ_API_KEY is not set — AI endpoints will fail');
+      return;
     }
     this.client = new Groq({ apiKey: process.env.GROQ_API_KEY });
   }

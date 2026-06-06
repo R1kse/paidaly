@@ -1,37 +1,45 @@
-﻿import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { UserRole } from '@prisma/client';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 
-type AuthenticatedRequest = Request & {
-  user?: {
-    role?: UserRole;
-  };
-};
-
+// гуард для проверки роли пользователя
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+  constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
+    // получаем список разрешенных ролей из декоратора
+    const roles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
-    if (!requiredRoles || requiredRoles.length === 0) {
+    // если роли не указаны - пропускаем всех
+    if (!roles || roles.length === 0) {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    const userRole = request.user?.role;
+    const req = context.switchToHttp().getRequest<any>();
+    const user = req.user;
 
-    if (!userRole || !requiredRoles.includes(userRole)) {
+    if (!user) {
+      throw new ForbiddenException('Insufficient role');
+    }
+
+    if (!user.role) {
+      throw new ForbiddenException('Insufficient role');
+    }
+
+    // проверяем есть ли роль пользователя в списке разрешенных
+    let hasRole = false;
+    for (let i = 0; i < roles.length; i++) {
+      if (roles[i] === user.role) {
+        hasRole = true;
+        break;
+      }
+    }
+
+    if (hasRole === false) {
       throw new ForbiddenException('Insufficient role');
     }
 

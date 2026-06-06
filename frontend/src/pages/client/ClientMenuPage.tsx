@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../../api/client';
 import { useCartStore } from '../../store/cart';
 import { useToastStore } from '../../store/toast';
+import './client-menu.css';
 
 type ModifierOption = { id: string; title: string; priceDelta: number };
 type ModifierGroup = {
@@ -271,34 +272,21 @@ export default function ClientMenuPage() {
   };
 
   return (
-    <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+    <div className="menu-layout">
 
       {/* ── LEFT SIDEBAR (hidden on mobile via .menu-sidebar-desktop) ── */}
-      <aside className="menu-sidebar-desktop" style={{
-        width: 220, flexShrink: 0, position: 'sticky', top: 80,
-        background: '#fff', borderRadius: 20, padding: '18px 16px',
-        boxShadow: '0 4px 16px -8px rgba(27,58,45,.1)',
-        border: '1.5px solid #E3ECE1',
-        maxHeight: 'calc(100vh - 100px)', overflowY: 'auto',
-      }}>
+      <aside className="menu-sidebar menu-sidebar-desktop">
 
         {/* Dish types */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, color: '#6B8F71', marginBottom: 10, textTransform: 'uppercase' }}>
-            Тип блюда
-          </div>
+          <div className="menu-sidebar__section-label">Тип блюда</div>
           <div
             onClick={() => setActiveDishType('')}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '7px 10px', borderRadius: 10, cursor: 'pointer', marginBottom: 2,
-              background: !activeDishType ? '#EEF6EC' : 'transparent',
-              fontWeight: !activeDishType ? 800 : 600, fontSize: 13, color: '#1B3A2D',
-            }}
+            className={`menu-sidebar__dish-row ${!activeDishType ? 'menu-sidebar__dish-row--active' : 'menu-sidebar__dish-row--inactive'}`}
           >
             <span style={{ fontSize: 15 }}>🍴</span>
             <span style={{ flex: 1 }}>Все</span>
-            <span style={{ fontSize: 11, color: '#6B8F71', fontWeight: 700 }}>{items.length}</span>
+            <span className="menu-sidebar__dish-count">{items.length}</span>
           </div>
           {DISH_TYPES.map((dt) => {
             const count = dishTypeCounts[dt.type] ?? 0;
@@ -308,16 +296,11 @@ export default function ClientMenuPage() {
               <div
                 key={dt.type}
                 onClick={() => setActiveDishType(active ? '' : dt.type)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '7px 10px', borderRadius: 10, cursor: 'pointer', marginBottom: 2,
-                  background: active ? '#EEF6EC' : 'transparent',
-                  fontWeight: active ? 800 : 600, fontSize: 13, color: '#1B3A2D',
-                }}
+                className={`menu-sidebar__dish-row ${active ? 'menu-sidebar__dish-row--active' : 'menu-sidebar__dish-row--inactive'}`}
               >
                 <span style={{ fontSize: 15 }}>{dt.emoji}</span>
                 <span style={{ flex: 1 }}>{dt.label}</span>
-                <span style={{ fontSize: 11, color: '#6B8F71', fontWeight: 700 }}>{count}</span>
+                <span className="menu-sidebar__dish-count">{count}</span>
               </div>
             );
           })}
@@ -325,12 +308,8 @@ export default function ClientMenuPage() {
 
         {/* Calorie filter */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, color: '#6B8F71', marginBottom: 10, textTransform: 'uppercase' }}>
-            Калорийность
-          </div>
-          <div style={{ fontSize: 12, color: '#1B3A2D', fontWeight: 700, marginBottom: 6 }}>
-            до {calFilter} ккал
-          </div>
+          <div className="menu-sidebar__section-label">Калорийность</div>
+          <div className="menu-sidebar__cal-value">до {calFilter} ккал</div>
           <input
             type="range"
             min={0}
@@ -340,7 +319,7 @@ export default function ClientMenuPage() {
             onChange={(e) => setCalFilter(Number(e.target.value))}
             style={{ width: '100%', accentColor: '#3A9E5F' }}
           />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#6B8F71' }}>
+          <div className="menu-sidebar__cal-labels">
             <span>0</span><span>{calMax}</span>
           </div>
         </div>
@@ -348,42 +327,31 @@ export default function ClientMenuPage() {
       </aside>
 
       {/* ── RIGHT: search bar + grid ── */}
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div className="menu-grid-area">
 
         {/* Top bar */}
-        <div style={{ marginBottom: 14 }}>
+        <div className="menu-topbar">
           {/* Row 1: search + sort + count */}
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10 }}>
-            <div style={{ flex: 1, minWidth: 180, position: 'relative' }}>
+          <div className="menu-topbar__row1">
+            <div className="menu-topbar__search-wrap">
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="🔍  Поиск блюда..."
-                style={{
-                  width: '100%', padding: '10px 14px', borderRadius: 12,
-                  border: '1.5px solid #E3ECE1', fontSize: 13,
-                  fontFamily: 'Nunito, sans-serif', outline: 'none',
-                  background: '#fff', color: '#1B3A2D', boxSizing: 'border-box',
-                }}
+                className="menu-topbar__search"
               />
             </div>
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as typeof sort)}
-              style={{
-                padding: '10px 14px', borderRadius: 12, border: '1.5px solid #E3ECE1',
-                fontSize: 13, fontFamily: 'Nunito, sans-serif', background: '#fff',
-                color: '#1B3A2D', fontWeight: 700, outline: 'none', cursor: 'pointer',
-              }}
+              className="menu-topbar__sort"
             >
               <option value="default">Популярные</option>
               <option value="price_asc">Сначала дешевле</option>
               <option value="price_desc">Сначала дороже</option>
               <option value="cal_asc">Меньше калорий</option>
             </select>
-            <span style={{ fontSize: 13, color: '#6B8F71', fontWeight: 700, whiteSpace: 'nowrap' }}>
-              {filteredItems.length} блюд
-            </span>
+            <span className="menu-topbar__count">{filteredItems.length} блюд</span>
           </div>
 
           {/* Mobile: dish type chips (visible only on ≤768px via CSS) */}
@@ -408,28 +376,16 @@ export default function ClientMenuPage() {
           </div>
 
           {/* Row 2: diet tag pills */}
-          <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }} className="no-sb">
+          <div className="menu-topbar__pills no-sb">
             {allDietTags.map((tag) => {
               const active = activeDietTags.has(tag);
               return (
                 <button
                   key={tag}
                   onClick={() => toggleDietTag(tag)}
-                  style={{
-                    flexShrink: 0,
-                    display: 'inline-flex', alignItems: 'center', gap: 5,
-                    padding: '6px 12px', borderRadius: 999,
-                    border: `1.5px solid ${active ? '#3A9E5F' : '#D8EDD8'}`,
-                    background: active ? '#3A9E5F' : '#fff',
-                    color: active ? '#fff' : '#1B3A2D',
-                    fontWeight: 700, fontSize: 12,
-                    fontFamily: 'Nunito, sans-serif',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
-                    boxShadow: active ? '0 2px 8px -2px rgba(58,158,95,.4)' : 'none',
-                  }}
+                  className={`menu-diet-pill ${active ? 'menu-diet-pill--active' : 'menu-diet-pill--inactive'}`}
                 >
-                  {active && <span style={{ fontSize: 10 }}>✓</span>}
+                  {active && <span className="menu-diet-pill__check">✓</span>}
                   {DIET_LABELS[tag]}
                 </button>
               );
@@ -437,15 +393,7 @@ export default function ClientMenuPage() {
             {activeDietTags.size > 0 && (
               <button
                 onClick={() => setActiveDietTags(new Set())}
-                style={{
-                  flexShrink: 0,
-                  display: 'inline-flex', alignItems: 'center', gap: 5,
-                  padding: '6px 12px', borderRadius: 999,
-                  border: '1.5px solid #FBE4E4',
-                  background: '#FBE4E4', color: '#C0392B',
-                  fontWeight: 700, fontSize: 12,
-                  fontFamily: 'Nunito, sans-serif', cursor: 'pointer',
-                }}
+                className="menu-diet-pill--reset"
               >
                 ✕ Сбросить
               </button>
@@ -455,16 +403,12 @@ export default function ClientMenuPage() {
 
         {/* Card grid */}
         {filteredItems.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '48px 0', color: '#6B8F71' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
-            <p style={{ fontWeight: 700 }}>Ничего не найдено</p>
+          <div className="menu-empty">
+            <div className="menu-empty__icon">🔍</div>
+            <p className="menu-empty__text">Ничего не найдено</p>
           </div>
         ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-            gap: 16,
-          }}>
+          <div className="menu-card-grid">
             {filteredItems.map((item) => (
               <DishCard
                 key={item.id}
@@ -512,92 +456,52 @@ function DishCard({
   const emoji = DISH_TYPES.find((d) => d.type === item.dishType)?.emoji ?? '🍴';
 
   return (
-    <div style={{
-      background: '#fff', borderRadius: 20, overflow: 'hidden',
-      boxShadow: '0 6px 20px -12px rgba(27,58,45,.18)',
-      border: '1.5px solid #EEF6EC',
-      display: 'flex', flexDirection: 'column',
-    }}>
+    <div className="dish-card-new">
       {/* Image area */}
-      <div style={{
-        height: 120, background: bg,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        position: 'relative',
-      }}>
-        <span style={{ fontSize: 52, lineHeight: 1 }}>{emoji}</span>
+      <div className="dish-card-new__image" style={{ background: bg }}>
+        <span className="dish-card-new__emoji">{emoji}</span>
         {item.calories != null && (
-          <span style={{
-            position: 'absolute', bottom: 8, right: 8,
-            background: 'rgba(27,58,45,.7)', color: '#fff',
-            fontSize: 10, fontWeight: 800, padding: '3px 7px',
-            borderRadius: 20,
-          }}>
-            {item.calories} ккал
-          </span>
+          <span className="dish-card-new__cal-badge">{item.calories} ккал</span>
         )}
       </div>
 
       {/* Body */}
-      <div style={{ padding: '12px 12px 14px', display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
-        <div style={{ fontWeight: 800, fontSize: 13, color: '#1B3A2D', lineHeight: 1.3 }}>
-          {item.title}
-        </div>
+      <div className="dish-card-new__body">
+        <div className="dish-card-new__title">{item.title}</div>
 
         {item.ingredients && (
-          <div style={{
-            fontSize: 11, color: '#6B8F71', lineHeight: 1.4,
-            overflow: 'hidden', display: '-webkit-box',
-            WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-          }}>
-            {item.ingredients}
-          </div>
+          <div className="dish-card-new__ingredients">{item.ingredients}</div>
         )}
 
         {/* BJU row */}
         {(item.protein != null || item.carbs != null || item.fat != null) && (
-          <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
+          <div className="dish-card-new__bju">
             {item.protein != null && (
-              <span style={{ fontSize: 10, fontWeight: 800, color: '#2196F3' }}>
-                Б {item.protein}г
-              </span>
+              <span className="dish-card-new__bju-protein">Б {item.protein}г</span>
             )}
             {item.carbs != null && (
-              <span style={{ fontSize: 10, fontWeight: 800, color: '#FF9800' }}>
-                У {item.carbs}г
-              </span>
+              <span className="dish-card-new__bju-carbs">У {item.carbs}г</span>
             )}
             {item.fat != null && (
-              <span style={{ fontSize: 10, fontWeight: 800, color: '#E91E63' }}>
-                Ж {item.fat}г
-              </span>
+              <span className="dish-card-new__bju-fat">Ж {item.fat}г</span>
             )}
           </div>
         )}
 
         {/* Compact modifier pills */}
         {item.modifierGroups.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 4 }}>
+          <div className="dish-card-new__modifiers">
             {item.modifierGroups.map((group) => (
               <div key={group.id}>
-                <div style={{ fontSize: 10, fontWeight: 800, color: '#6B8F71', marginBottom: 3 }}>
-                  {group.title}
-                </div>
-                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                <div className="dish-card-new__mod-group-title">{group.title}</div>
+                <div className="dish-card-new__mod-options">
                   {group.options.map((option) => {
                     const key = `${item.id}:${group.id}`;
                     const isChecked = (selected[key] ?? []).includes(option.id);
                     return (
                       <label
                         key={option.id}
-                        style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 3,
-                          padding: '3px 8px', borderRadius: 20, cursor: 'pointer',
-                          fontSize: 10, fontWeight: 700, userSelect: 'none',
-                          background: isChecked ? '#3A9E5F' : '#EEF6EC',
-                          color: isChecked ? '#fff' : '#1B3A2D',
-                          border: `1.5px solid ${isChecked ? '#3A9E5F' : '#D8EDD8'}`,
-                          transition: 'all 0.12s',
-                        }}
+                        className={`dish-card-new__mod-pill ${isChecked ? 'dish-card-new__mod-pill--active' : 'dish-card-new__mod-pill--inactive'}`}
                       >
                         <input
                           type={group.type === 'SINGLE' ? 'radio' : 'checkbox'}
@@ -622,33 +526,11 @@ function DishCard({
         )}
 
         {/* Price + actions */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: 8 }}>
-          <span style={{ fontWeight: 800, fontSize: 15, color: '#1B3A2D' }}>{item.price} ₸</span>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <button
-              onClick={() => onOrderNow(item)}
-              style={{
-                padding: '6px 10px', borderRadius: 10,
-                background: '#EEF6EC', border: 'none',
-                fontWeight: 800, fontSize: 11, color: '#3A9E5F',
-                fontFamily: 'Nunito, sans-serif', cursor: 'pointer',
-              }}
-            >
-              Сразу
-            </button>
-            <button
-              onClick={() => onAdd(item)}
-              style={{
-                width: 32, height: 32, borderRadius: 10,
-                background: 'linear-gradient(135deg, #3A9E5F, #8BC34A)',
-                border: 'none', color: '#fff',
-                fontSize: 20, cursor: 'pointer',
-                display: 'grid', placeItems: 'center',
-                fontFamily: 'Nunito, sans-serif',
-              }}
-            >
-              +
-            </button>
+        <div className="dish-card-new__footer">
+          <span className="dish-card-new__price">{item.price} ₸</span>
+          <div className="dish-card-new__actions">
+            <button className="dish-card-new__now-btn" onClick={() => onOrderNow(item)}>Сразу</button>
+            <button className="dish-card-new__add-btn" onClick={() => onAdd(item)}>+</button>
           </div>
         </div>
       </div>

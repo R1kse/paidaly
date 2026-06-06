@@ -51,13 +51,11 @@ export class UsersService {
     email: string;
     name: string;
   }) {
-    // Try by googleId first
     const byGoogleId = await this.prisma.user.findUnique({
       where: { googleId: input.googleId },
     });
     if (byGoogleId) return byGoogleId;
 
-    // Try by email — link Google to existing account
     const byEmail = await this.prisma.user.findUnique({
       where: { email: input.email },
     });
@@ -68,7 +66,6 @@ export class UsersService {
       });
     }
 
-    // New user via Google
     return this.prisma.user.create({
       data: {
         name: input.name,

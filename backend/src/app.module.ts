@@ -14,6 +14,7 @@ import { ProfileModule } from './profile/profile.module';
 import { AuditModule } from './audit/audit.module';
 import { MessagesModule } from './messages/messages.module';
 import { AiModule } from './ai/ai.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { AiModule } from './ai/ai.module';
     AuditModule,
     MessagesModule,
     AiModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [AppGateway],
