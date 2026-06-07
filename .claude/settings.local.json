@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c ':*)",
+      "Bash(curl -s http://localhost:3000/menu)",
+      "Bash(node -e ':*)",
+      "Bash(docker compose *)",
+      "Bash(node dist/src/main.js)",
+      "Bash(npm run *)",
+      "WebFetch(domain:api.anthropic.com)"
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Paidaly — доставка здорового питания</title>
+
+    <!-- PWA / iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Paidaly" />
+    <link rel="apple-touch-icon" href="/paidaly/apple-touch-icon.png" />
+    <meta name="theme-color" content="#3A9E5F" />
+
+    <!-- SPA redirect restore (GitHub Pages) -->
+    <script>
+      (function (l) {
+        if (l.search[1] === '/') {
+          var decoded = l.search
+            .slice(1)
+            .split('&')
+            .map(function (s) { return s.replace(/~and~/g, '&'); })
+            .join('?');
+          window.history.replaceState(
+            null, null,
+            l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location));
+    </script>
+    <script type="module" crossorigin src="/paidaly/assets/index-D4H6UKTc.js"></script>
+    <link rel="stylesheet" crossorigin href="/paidaly/assets/index-D7uKNA19.css">
+  <link rel="manifest" href="/paidaly/manifest.webmanifest"></head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
