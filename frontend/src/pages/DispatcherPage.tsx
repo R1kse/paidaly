@@ -552,11 +552,18 @@ function OrdersTab({ orders, couriers, statusFilter, onStatusFilter, onSetStatus
                   </td>
                 </tr>
               )}
-              {filtered.map((order: any) => (
+              {filtered.map((order: any) => {
+                const kaspiPaid = order.payment?.method === 'KASPI' && order.payment?.status === 'PAID';
+                const kaspiPending = order.payment?.method === 'KASPI' && order.payment?.status !== 'PAID';
+                return (
                 <tr
                   key={order.id}
                   onClick={() => { setSelectedOrderId(order.id); setDetailTab('details'); }}
-                  style={{ cursor: 'pointer' }}
+                  style={{
+                    cursor: 'pointer',
+                    background: kaspiPaid && order.status === 'CREATED' ? '#FFF8F8' : undefined,
+                    outline: kaspiPaid && order.status === 'CREATED' ? '2px solid #FFD0D0' : undefined,
+                  }}
                 >
                   <td><span className="order-id-cell">#{order.id.slice(-6)}</span></td>
                   <td style={{ fontSize: 12 }}>{order.client?.name ?? '—'}</td>
@@ -571,9 +578,14 @@ function OrdersTab({ orders, couriers, statusFilter, onStatusFilter, onSetStatus
                         display: 'inline-block', marginLeft: 6,
                         background: '#FFF3F3', color: '#E50000', border: '1px solid #FFD0D0',
                         borderRadius: 6, padding: '1px 6px', fontSize: 10, fontWeight: 800,
-                      }}>
-                        💳 Оплачено
-                      </span>
+                      }}>✓ Оплачено</span>
+                    )}
+                    {order.payment?.method === 'KASPI' && order.payment?.status !== 'PAID' && (
+                      <span style={{
+                        display: 'inline-block', marginLeft: 6,
+                        background: '#FFF8E1', color: '#795548', border: '1px solid #FFE082',
+                        borderRadius: 6, padding: '1px 6px', fontSize: 10, fontWeight: 800,
+                      }}>⏳ Ждёт</span>
                     )}
                   </td>
                   <td><StatusBadge status={order.status} /></td>
@@ -601,7 +613,7 @@ function OrdersTab({ orders, couriers, statusFilter, onStatusFilter, onSetStatus
                   </td>
                   <td onClick={(e) => e.stopPropagation()}>
                     <div style={{ display: 'flex', gap: 4 }}>
-                      {order.status === 'CREATED' && order.payment?.method === 'KASPI' && order.payment?.status === 'PAID' && (
+                      {order.status === 'CREATED' && kaspiPaid && (
                         <button
                           className="sm primary"
                           onClick={() => onSetStatus(order.id, 'CONFIRMED')}
@@ -610,7 +622,12 @@ function OrdersTab({ orders, couriers, statusFilter, onStatusFilter, onSetStatus
                           💳 Kaspi ✓
                         </button>
                       )}
-                      {order.status === 'CREATED' && !(order.payment?.method === 'KASPI' && order.payment?.status === 'PAID') && (
+                      {order.status === 'CREATED' && kaspiPending && (
+                        <span style={{ fontSize: 11, color: '#795548', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                          ⏳ Ждёт оплаты
+                        </span>
+                      )}
+                      {order.status === 'CREATED' && !kaspiPaid && !kaspiPending && (
                         <button className="sm primary" onClick={() => onSetStatus(order.id, 'CONFIRMED')}>Подтвердить</button>
                       )}
                       {order.status === 'CONFIRMED' && (
@@ -623,7 +640,8 @@ function OrdersTab({ orders, couriers, statusFilter, onStatusFilter, onSetStatus
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -723,7 +741,18 @@ function OrdersTab({ orders, couriers, statusFilter, onStatusFilter, onSetStatus
 
                 {/* Payment */}
                 <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600 }}>
-                  Оплата: {selectedOrder.payment?.method ?? '—'} · Создан: {new Date(selectedOrder.createdAt).toLocaleString('ru')}
+                  Оплата: {selectedOrder.payment?.method ?? '—'}
+                  {selectedOrder.payment?.method === 'KASPI' && (
+                    <span style={{
+                      marginLeft: 6, padding: '1px 6px', borderRadius: 6, fontSize: 11, fontWeight: 800,
+                      background: selectedOrder.payment?.status === 'PAID' ? '#FFF3F3' : '#FFF8E1',
+                      color: selectedOrder.payment?.status === 'PAID' ? '#E50000' : '#795548',
+                      border: `1px solid ${selectedOrder.payment?.status === 'PAID' ? '#FFD0D0' : '#FFE082'}`,
+                    }}>
+                      {selectedOrder.payment?.status === 'PAID' ? '✓ Оплачено' : '⏳ Ждёт оплаты'}
+                    </span>
+                  )}
+                  {' · '}Создан: {new Date(selectedOrder.createdAt).toLocaleString('ru')}
                 </div>
               </div>
             )}
