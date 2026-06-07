@@ -462,7 +462,7 @@ function DishCard({
       <div className="dish-card-new__image" style={{ background: item.slug ? '#f0ede8' : bg }}>
         {item.slug ? (
           <img
-            src={`${import.meta.env.BASE_URL}dishes/${item.slug}.jpg`}
+            src={`${import.meta.env.BASE_URL}dishes/${item.slug}.webp`}
             alt={item.title}
             className="dish-card-new__photo"
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
