@@ -6,6 +6,7 @@ import { api } from '../../api/client';
 import { useCartStore } from '../../store/cart';
 import { Link, useNavigate } from 'react-router-dom';
 import KaspiQrModal from '../../components/KaspiQrModal';
+import './client-menu.css';
 
 const defaultCenter: [number, number] = [43.238949, 76.889709];
 
@@ -190,23 +191,13 @@ export default function ClientCheckoutPage() {
 
         {/* Delivery type */}
         <div className="card">
-          <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 10 }}>
-            Тип доставки
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div className="checkout-section-label">Тип доставки</div>
+          <div className="checkout-delivery-grid">
             {(['DELIVERY', 'PICKUP'] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => cart.setDeliveryType(t)}
-                style={{
-                  padding: '14px',
-                  borderRadius: 14,
-                  border: `2px solid ${cart.deliveryType === t ? 'var(--green)' : 'var(--line)'}`,
-                  background: cart.deliveryType === t ? 'var(--accent-bg)' : 'var(--bg-tint)',
-                  color: cart.deliveryType === t ? 'var(--green-deep)' : 'var(--ink)',
-                  fontWeight: 800,
-                  fontSize: 13,
-                }}
+                className={`checkout-delivery-btn${cart.deliveryType === t ? ' checkout-delivery-btn--active' : ''}`}
               >
                 {t === 'DELIVERY' ? '🚴 Доставка' : '🏃 Самовывоз'}
               </button>
@@ -217,44 +208,38 @@ export default function ClientCheckoutPage() {
         {/* Address search */}
         {cart.deliveryType === 'DELIVERY' && (
           <div className="card">
-            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: 10 }}>
-              Адрес доставки
-            </div>
-            <div className="inline" style={{ marginBottom: 8 }}>
+            <div className="checkout-section-label">Адрес доставки</div>
+            <div className="checkout-address-row">
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Поиск адреса в Алматы..."
-                style={{ flex: 1 }}
+                className="checkout-address-input"
                 onKeyDown={(e) => e.key === 'Enter' && search()}
               />
-              <button className="primary" onClick={search} style={{ flexShrink: 0, padding: '11px 16px', borderRadius: 12 }}>
+              <button className="primary checkout-search-btn" onClick={search}>
                 Найти
               </button>
             </div>
-            {searchError && <div style={{ background: '#FBE4E4', borderRadius: 10, padding: '8px 12px', fontSize: 12, color: '#8A2E2E', fontWeight: 700 }}>{searchError}</div>}
+            {searchError && <div className="checkout-error">{searchError}</div>}
             {results.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
+              <div className="checkout-results">
                 {results.map((r) => (
-                  <button key={r.place_id} onClick={() => selectResult(r)} style={{ textAlign: 'left', justifyContent: 'flex-start', fontSize: 12, padding: '8px 12px', borderRadius: 10 }}>
+                  <button key={r.place_id} onClick={() => selectResult(r)} className="checkout-result-btn">
                     📍 {r.display_name}
                   </button>
                 ))}
               </div>
             )}
             {address && (
-              <div style={{ marginTop: 10, padding: '10px 12px', background: 'var(--accent-bg)', borderRadius: 12, fontSize: 13, color: 'var(--green-deep)', fontWeight: 700, border: '1.5px solid rgba(58,158,95,.3)' }}>
-                ✓ {addressText}
-              </div>
+              <div className="checkout-address-confirmed">✓ {addressText}</div>
             )}
             {savedAddresses?.length > 0 && (
               <>
-                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.6px', marginTop: 14, marginBottom: 8 }}>
-                  Сохранённые адреса
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div className="checkout-section-label" style={{ marginTop: 14 }}>Сохранённые адреса</div>
+                <div className="checkout-results">
                   {savedAddresses.map((a: any) => (
-                    <button key={a.id} onClick={() => { setAddress([a.lat, a.lng]); setAddressText(a.addressText); }} style={{ textAlign: 'left', justifyContent: 'flex-start', fontSize: 12, padding: '8px 12px', borderRadius: 10 }}>
+                    <button key={a.id} onClick={() => { setAddress([a.lat, a.lng]); setAddressText(a.addressText); }} className="checkout-result-btn">
                       📍 {a.label}: {a.addressText}
                     </button>
                   ))}
