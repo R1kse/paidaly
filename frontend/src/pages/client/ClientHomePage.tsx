@@ -115,7 +115,14 @@ export default function ClientHomePage() {
             {popular.map((item: any) => (
               <div key={item.id} className="home-popular-card">
                 <div className="home-popular-card__image" style={{ background: dishBg(item.dishType) }}>
-                  {dishEmoji(item.dishType)}
+                  {item.slug ? (
+                    <img
+                      src={`${import.meta.env.BASE_URL}dishes/${item.slug}.webp`}
+                      alt={item.title}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  ) : dishEmoji(item.dishType)}
                 </div>
                 <div className="home-popular-card__body">
                   <div className="home-popular-card__title">{item.title}</div>
@@ -139,7 +146,14 @@ export default function ClientHomePage() {
             {newest.map((item: any) => (
               <div key={item.id} className="home-newest-card">
                 <div className="home-newest-card__image" style={{ background: dishBg(item.dishType) }}>
-                  {dishEmoji(item.dishType)}
+                  {item.slug ? (
+                    <img
+                      src={`${import.meta.env.BASE_URL}dishes/${item.slug}.webp`}
+                      alt={item.title}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  ) : dishEmoji(item.dishType)}
                 </div>
                 <div className="home-newest-card__info">
                   <div className="home-newest-card__title">{item.title}</div>

@@ -174,9 +174,11 @@
   background: linear-gradient(135deg, #3A9E5F, #8BC34A);
   border: 0;
   color: #fff;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 18px;
+  padding: 0 0 1px 0;
   cursor: pointer;
 }
 
@@ -255,8 +257,10 @@
   background: linear-gradient(135deg, #3A9E5F, #8BC34A);
   border: 0;
   color: #fff;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 18px;
+  padding: 0 0 1px 0;
   cursor: pointer;
 }
