@@ -453,39 +453,45 @@ function DishCard({
   onAdd: (item: MenuItem) => void;
   onOrderNow: (item: MenuItem) => void;
 }) {
+  const [showModal, setShowModal] = useState(false);
   const bg = DISH_BG[item.dishType] ?? '#EEF6EC';
   const emoji = DISH_TYPES.find((d) => d.type === item.dishType)?.emoji ?? '🍴';
+  const hasModifiers = item.modifierGroups.length > 0;
+
+  const handlePlus = () => {
+    if (hasModifiers) setShowModal(true);
+    else onAdd(item);
+  };
 
   return (
-    <div className="dish-card-new">
-      {/* Image area */}
-      <div className="dish-card-new__image" style={{ background: item.slug ? '#f0ede8' : bg }}>
-        {item.slug ? (
-          <img
-            src={`${import.meta.env.BASE_URL}dishes/${item.slug}.webp`}
-            alt={item.title}
-            className="dish-card-new__photo"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-          />
-        ) : (
-          <span className="dish-card-new__emoji">{emoji}</span>
-        )}
-        {item.calories != null && (
-          <span className="dish-card-new__cal-badge">{item.calories} ккал</span>
-        )}
-      </div>
+    <>
+      <div className="dish-card-new">
+        {/* Image — full, not cropped */}
+        <div className="dish-card-new__image-wrap" style={{ background: item.slug ? '#f7f4f0' : bg }}>
+          {item.slug ? (
+            <img
+              src={`${import.meta.env.BASE_URL}dishes/${item.slug}.webp`}
+              alt={item.title}
+              className="dish-card-new__photo"
+              onError={(e) => {
+                const img = e.target as HTMLImageElement;
+                img.style.display = 'none';
+                img.parentElement!.style.background = bg;
+              }}
+            />
+          ) : (
+            <span className="dish-card-new__emoji">{emoji}</span>
+          )}
+        </div>
 
-      {/* Body */}
-      <div className="dish-card-new__body">
-        <div className="dish-card-new__title">{item.title}</div>
+        {/* Body */}
+        <div className="dish-card-new__body">
+          <div className="dish-card-new__title">{item.title}</div>
 
-        {item.ingredients && (
-          <div className="dish-card-new__ingredients">{item.ingredients}</div>
-        )}
-
-        {/* BJU row */}
-        {(item.protein != null || item.carbs != null || item.fat != null) && (
-          <div className="dish-card-new__bju">
+          <div className="dish-card-new__meta">
+            {item.calories != null && (
+              <span className="dish-card-new__cal">{item.calories} ккал</span>
+            )}
             {item.protein != null && (
               <span className="dish-card-new__bju-protein">Б {item.protein}г</span>
             )}
@@ -496,54 +502,71 @@ function DishCard({
               <span className="dish-card-new__bju-fat">Ж {item.fat}г</span>
             )}
           </div>
-        )}
 
-        {/* Compact modifier pills */}
-        {item.modifierGroups.length > 0 && (
-          <div className="dish-card-new__modifiers">
-            {item.modifierGroups.map((group) => (
-              <div key={group.id}>
-                <div className="dish-card-new__mod-group-title">{group.title}</div>
-                <div className="dish-card-new__mod-options">
-                  {group.options.map((option) => {
-                    const key = `${item.id}:${group.id}`;
-                    const isChecked = (selected[key] ?? []).includes(option.id);
-                    return (
-                      <label
-                        key={option.id}
-                        className={`dish-card-new__mod-pill ${isChecked ? 'dish-card-new__mod-pill--active' : 'dish-card-new__mod-pill--inactive'}`}
-                      >
-                        <input
-                          type={group.type === 'SINGLE' ? 'radio' : 'checkbox'}
-                          name={`${item.id}:${group.id}`}
-                          checked={isChecked}
-                          onChange={(e) => onSelect(item.id, group, option.id, e.target.checked)}
-                          style={{ display: 'none' }}
-                        />
-                        {option.title}
-                        {option.priceDelta !== 0 && (
-                          <span style={{ opacity: 0.8 }}>
-                            {option.priceDelta > 0 ? '+' : ''}{option.priceDelta}₸
-                          </span>
-                        )}
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Price + actions */}
-        <div className="dish-card-new__footer">
-          <span className="dish-card-new__price">{item.price} ₸</span>
-          <div className="dish-card-new__actions">
-            <button className="dish-card-new__now-btn" onClick={() => onOrderNow(item)}>Сразу</button>
-            <button className="dish-card-new__add-btn" onClick={() => onAdd(item)}>+</button>
+          <div className="dish-card-new__footer">
+            <span className="dish-card-new__price">{item.price} ₸</span>
+            <button className="dish-card-new__add-btn" onClick={handlePlus}>+</button>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Modifier modal */}
+      {showModal && (
+        <div className="mod-modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="mod-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="mod-modal__header">
+              <span className="mod-modal__title">{item.title}</span>
+              <button className="mod-modal__close" onClick={() => setShowModal(false)}>✕</button>
+            </div>
+
+            <div className="mod-modal__body">
+              {item.modifierGroups.map((group) => {
+                const key = `${item.id}:${group.id}`;
+                const checked = selected[key] ?? [];
+                return (
+                  <div key={group.id} className="mod-modal__group">
+                    <div className="mod-modal__group-title">{group.title}</div>
+                    <div className="mod-modal__options">
+                      {group.options.map((option) => {
+                        const isChecked = checked.includes(option.id);
+                        return (
+                          <label
+                            key={option.id}
+                            className={`mod-modal__pill ${isChecked ? 'mod-modal__pill--active' : ''}`}
+                          >
+                            <input
+                              type={group.type === 'SINGLE' ? 'radio' : 'checkbox'}
+                              name={`${item.id}:${group.id}`}
+                              checked={isChecked}
+                              onChange={(e) => onSelect(item.id, group, option.id, e.target.checked)}
+                              style={{ display: 'none' }}
+                            />
+                            {option.title}
+                            {option.priceDelta !== 0 && (
+                              <span className="mod-modal__pill-delta">
+                                {option.priceDelta > 0 ? '+' : ''}{option.priceDelta}₸
+                              </span>
+                            )}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mod-modal__footer">
+              <button className="mod-modal__now-btn" onClick={() => { onOrderNow(item); setShowModal(false); }}>
+                Заказать сразу
+              </button>
+              <button className="mod-modal__add-btn" onClick={() => { onAdd(item); setShowModal(false); }}>
+                В корзину — {item.price} ₸
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
