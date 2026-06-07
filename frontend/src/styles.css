@@ -1952,6 +1952,31 @@ hr {
   .menu-sidebar-desktop  { display: none !important; }
   .mobile-dish-type-row  { display: flex !important; }
 
+  /* ── Menu card grid: 2 columns on mobile ── */
+  .menu-card-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .dish-card-new__title {
+    font-size: 12px;
+  }
+
+  .dish-card-new__price {
+    font-size: 13px;
+  }
+
+  .dish-card-new__meta {
+    gap: 3px;
+  }
+
+  .dish-card-new__cal,
+  .dish-card-new__bju-protein,
+  .dish-card-new__bju-carbs,
+  .dish-card-new__bju-fat {
+    font-size: 10px;
+  }
+
   .menu-mobile-cart {
     display: block;
     position: fixed;
