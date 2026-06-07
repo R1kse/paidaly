@@ -2038,8 +2038,36 @@ hr {
     padding-bottom: calc(80px + 56px + env(safe-area-inset-bottom)) !important;
   }
 
-  /* ── Map height on mobile ── */
-  .map { height: 240px; }
+  /* ── Checkout: hide map, single-column form ── */
+  .checkout > div:last-child { display: none !important; }
+  .checkout > div:first-child { width: 100%; }
+
+  /* Cards: tighter padding on mobile */
+  .card {
+    padding: 14px 14px !important;
+    border-radius: 16px !important;
+  }
+
+  /* Inputs: full width, bigger touch target */
+  .checkout input[type="text"],
+  .checkout input[type="search"],
+  .checkout textarea {
+    font-size: 16px !important; /* prevents iOS zoom */
+    padding: 12px 14px !important;
+    border-radius: 12px !important;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .checkout .inline {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .checkout .inline button {
+    width: 100%;
+    padding: 13px !important;
+  }
 
   /* ── ClientOrdersPage ── */
   .order-row {
