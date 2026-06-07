@@ -163,7 +163,7 @@ export default function ClientCheckoutPage() {
   };
 
   const totalPrice = cart.lines.reduce((s, l) => s + l.basePrice * l.quantity, 0);
-  const mobile = window.innerWidth < 769;
+  const mobile = window.innerWidth < 1024;
 
   return (
     <>

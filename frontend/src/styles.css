@@ -747,7 +747,7 @@ label.inline input[type=checkbox] { width: auto; }
   overflow-x: hidden;
 }
 
-@media (min-width: 769px) {
+@media (min-width: 1024px) {
   .checkout {
     display: grid;
     grid-template-columns: 1fr 1fr;

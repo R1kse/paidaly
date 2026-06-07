@@ -8,19 +8,7 @@ import 'leaflet/dist/leaflet.css';
 import './styles.css';
 
 if (import.meta.env.PROD) {
-  registerSW({
-    immediate: true,
-    onRegisteredSW(_url, r) {
-      if (r) {
-        // Check for updates every 60 seconds
-        setInterval(() => r.update(), 60_000);
-      }
-    },
-  });
-  // Force reload when a new SW takes control so stale JS/CSS is never served
-  navigator.serviceWorker?.addEventListener('controllerchange', () => {
-    window.location.reload();
-  });
+  registerSW({ immediate: true });
 }
 
 const queryClient = new QueryClient();
