@@ -456,7 +456,12 @@ function DishCard({
   const [showModal, setShowModal] = useState(false);
   const bg = DISH_BG[item.dishType] ?? '#EEF6EC';
   const emoji = DISH_TYPES.find((d) => d.type === item.dishType)?.emoji ?? '🍴';
-  const hasModifiers = item.modifierGroups.length > 0;
+  const visibleGroups = item.modifierGroups.filter((group) => {
+    if (item.dishType === 'SNACK') return false;
+    if (group.title === 'Убрать ингредиент' && ['DESSERT', 'DRINK'].includes(item.dishType)) return false;
+    return true;
+  });
+  const hasModifiers = visibleGroups.length > 0;
 
   const handlePlus = () => {
     if (hasModifiers) setShowModal(true);
@@ -520,12 +525,7 @@ function DishCard({
             </div>
 
             <div className="mod-modal__body">
-              {item.modifierGroups.filter((group: any) => {
-                // "Remove ingredient" makes no sense for single-ingredient items
-                if (group.title === 'Убрать ингредиент' &&
-                    ['SNACK', 'DESSERT', 'DRINK'].includes(item.dishType)) return false;
-                return true;
-              }).map((group) => {
+              {visibleGroups.map((group) => {
                 const key = `${item.id}:${group.id}`;
                 const checked = selected[key] ?? [];
                 return (
