@@ -32,6 +32,7 @@ type MenuItem = {
   protein?: number | null;
   carbs?: number | null;
   fat?: number | null;
+  imageUrl?: string | null;
   modifierGroups: ModifierGroup[];
 };
 
@@ -458,8 +459,16 @@ function DishCard({
   return (
     <div className="dish-card-new">
       {/* Image area */}
-      <div className="dish-card-new__image" style={{ background: bg }}>
-        <span className="dish-card-new__emoji">{emoji}</span>
+      <div className="dish-card-new__image" style={{ background: item.imageUrl ? '#f5f5f5' : bg }}>
+        {item.imageUrl ? (
+          <img
+            src={`${import.meta.env.BASE_URL}dishes/${item.slug}.jpg`}
+            alt={item.title}
+            className="dish-card-new__photo"
+          />
+        ) : (
+          <span className="dish-card-new__emoji">{emoji}</span>
+        )}
         {item.calories != null && (
           <span className="dish-card-new__cal-badge">{item.calories} ккал</span>
         )}

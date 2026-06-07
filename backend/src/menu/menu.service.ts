@@ -45,6 +45,7 @@ export class MenuService {
         protein: true,
         carbs: true,
         fat: true,
+        imageUrl: true,
         isActive: true,
         modifierGroups: {
           select: {
