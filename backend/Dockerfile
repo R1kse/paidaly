@@ -25,4 +25,4 @@ ENV PORT=3000
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node_modules/.bin/tsx prisma/seed.ts && node dist/src/main"]
