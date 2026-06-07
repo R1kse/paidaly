@@ -459,12 +459,13 @@ function DishCard({
   return (
     <div className="dish-card-new">
       {/* Image area */}
-      <div className="dish-card-new__image" style={{ background: item.imageUrl ? '#f5f5f5' : bg }}>
-        {item.imageUrl ? (
+      <div className="dish-card-new__image" style={{ background: item.slug ? '#f0ede8' : bg }}>
+        {item.slug ? (
           <img
             src={`${import.meta.env.BASE_URL}dishes/${item.slug}.jpg`}
             alt={item.title}
             className="dish-card-new__photo"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
           />
         ) : (
           <span className="dish-card-new__emoji">{emoji}</span>
