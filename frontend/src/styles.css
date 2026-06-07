@@ -51,6 +51,7 @@
 
 /* ─── Reset ──────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { overflow-x: hidden; max-width: 100vw; }
 
 body {
   font-family: var(--font);
@@ -1937,15 +1938,31 @@ hr {
   }
 
   /* ── Client shell: hide desktop-only header elements ── */
-  .client-header-nav     { display: none !important; }
-  .client-header-address { display: none !important; }
-  .client-header-search  { display: none !important; }
-  .client-header-bell    { display: none !important; }
+  .client-header__nav      { display: none !important; }
+  .client-header-address   { display: none !important; }
+  .client-header-search    { display: none !important; }
+  .client-header-bell      { display: none !important; }
+  .client-header__right    { display: none !important; }
+  .client-header__logo-name { display: none !important; }
 
-  /* ── Client content: pad bottom for tab bar ── */
+  .client-header {
+    padding: 0 12px;
+    height: 48px;
+    justify-content: flex-start;
+    overflow: hidden;
+  }
+
+  /* ── Client content: pad bottom for tab bar, prevent horizontal overflow ── */
+  .client-shell__content,
   .client-content-wrapper {
-    padding: 16px 16px calc(56px + env(safe-area-inset-bottom) + 16px) !important;
+    padding: 12px 12px calc(56px + env(safe-area-inset-bottom) + 16px) !important;
     max-width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  .client-shell {
+    overflow-x: hidden;
   }
 
   /* ── ClientMenuPage: hide desktop sidebar, show mobile filters ── */
