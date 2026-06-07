@@ -12,7 +12,7 @@ export default defineConfig({
       manifest: {
         name: 'Paidaly',
         short_name: 'Paidaly',
-        description: 'Доставка здорового питания в Алматы — v2',
+        description: 'Доставка здорового питания в Алматы — v3',
         start_url: './',
         scope: './',
         display: 'standalone',
