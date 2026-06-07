@@ -520,7 +520,12 @@ function DishCard({
             </div>
 
             <div className="mod-modal__body">
-              {item.modifierGroups.map((group) => {
+              {item.modifierGroups.filter((group: any) => {
+                // "Remove ingredient" makes no sense for single-ingredient items
+                if (group.title === 'Убрать ингредиент' &&
+                    ['SNACK', 'DESSERT', 'DRINK'].includes(item.dishType)) return false;
+                return true;
+              }).map((group) => {
                 const key = `${item.id}:${group.id}`;
                 const checked = selected[key] ?? [];
                 return (
