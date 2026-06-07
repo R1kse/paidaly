@@ -175,7 +175,7 @@ export default function ClientCheckoutPage() {
       />
     )}
     <div className="checkout">
-      <div className="has-mobile-cta" style={{ display: 'grid', gap: 16 }}>
+      <div className="has-mobile-cta checkout-form-col">
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link to="/client/menu" style={{
@@ -391,7 +391,7 @@ export default function ClientCheckoutPage() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gap: 16 }}>
+      <div className="checkout-map-col">
         <div className="card">
           <h3 style={{ marginBottom: 14, fontSize: 16 }}>📍 Карта доставки</h3>
           <div className="map">

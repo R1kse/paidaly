@@ -739,13 +739,21 @@ label.inline input[type=checkbox] { width: auto; }
 
 /* ─── Checkout ───────────────────────────────────────────── */
 .checkout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
+}
+
+@media (min-width: 769px) {
+  .checkout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
 }
 
 /* ─── Map ────────────────────────────────────────────────── */
@@ -1797,7 +1805,6 @@ hr {
 
 @media (max-width: 960px) {
   .menu-grid,
-  .checkout,
   .grid-2,
   .hero,
   .cards-grid,
@@ -2016,7 +2023,6 @@ hr {
   }
 
   /* ── ClientCheckoutPage ── */
-  .checkout { grid-template-columns: 1fr !important; }
   .checkout .card { max-width: 100%; overflow-x: hidden; box-sizing: border-box; }
 
   /* ── Фиксированная CTA-кнопка на мобиле ── */

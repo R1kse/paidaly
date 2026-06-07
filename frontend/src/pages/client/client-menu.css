@@ -483,6 +483,21 @@
   text-align: center;
 }
 
+/* ── Checkout page columns ── */
+.checkout-form-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.checkout-map-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
 /* ── Checkout page ── */
 .checkout-section-label {
   font-size: 11px;
