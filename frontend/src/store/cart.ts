@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export type CartLine = {
   lineId: string;
@@ -33,7 +34,7 @@ function sameOptions(a: string[], b: string[]) {
   return true;
 }
 
-export const useCartStore = create<CartState>((set) => ({
+export const useCartStore = create<CartState>()(persist((set) => ({
   lines: [],
   comment: '',
   deliveryType: 'DELIVERY',
@@ -72,4 +73,4 @@ export const useCartStore = create<CartState>((set) => ({
       lines: state.lines.filter((l) => l.lineId !== lineId),
     })),
   clear: () => set({ lines: [], comment: '' }),
-}));
+}), { name: 'cart' }));
