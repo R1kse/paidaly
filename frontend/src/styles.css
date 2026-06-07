@@ -2038,9 +2038,9 @@ hr {
     padding-bottom: calc(80px + 56px + env(safe-area-inset-bottom)) !important;
   }
 
-  /* ── Checkout: hide map, single-column form ── */
-  .checkout > div:last-child { display: none !important; }
+  /* ── Checkout: single-column, map stays but smaller ── */
   .checkout > div:first-child { width: 100%; }
+  .map { height: 220px; }
 
   /* Cards: tighter padding on mobile */
   .card {
