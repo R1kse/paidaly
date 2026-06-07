@@ -4,9 +4,9 @@ import { Link } from 'react-router-dom';
 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const DISHES = [
-  { title: 'Фитнес-салат',      desc: 'Курица, авокадо, овощи',  kcal: '450 ккал', emoji: '🥗', bg: 'dish-photo--salad' },
-  { title: 'Поке с лососем',    desc: 'Рис, лосось, эдамаме',    kcal: '520 ккал', emoji: '🥣', bg: 'dish-photo--main'  },
-  { title: 'Протеиновый смузи', desc: 'Банан, ягоды, протеин',   kcal: '200 ккал', emoji: '🥤', bg: 'dish-photo--drink' },
+  { title: 'Фитнес-салат',      desc: 'Курица, авокадо, овощи',  kcal: '450 ккал', slug: 'v2-s01' },
+  { title: 'Поке с лососем',    desc: 'Рис, лосось, эдамаме',    kcal: '520 ккал', slug: 'v2-m01' },
+  { title: 'Детокс-смузи',      desc: 'Шпинат, банан, имбирь',   kcal: '210 ккал', slug: 'v2-d01' },
 ];
 
 const ROLES = [
@@ -121,8 +121,12 @@ export default function HomePage() {
         <div className="cards-grid">
           {DISHES.map((item) => (
             <div key={item.title} className="menu-card">
-              <div className={`menu-photo ${item.bg}`}>
-                <span style={{ fontSize: 52 }}>{item.emoji}</span>
+              <div className="menu-photo" style={{ padding: 0, overflow: 'hidden' }}>
+                <img
+                  src={`${import.meta.env.BASE_URL}dishes/${item.slug}.webp`}
+                  alt={item.title}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
               </div>
               <div className="menu-card-body">
                 <h4 style={{ fontSize: 14, margin: 0 }}>{item.title}</h4>
