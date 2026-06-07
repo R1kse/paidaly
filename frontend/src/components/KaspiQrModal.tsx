@@ -16,10 +16,10 @@ export default function KaspiQrModal({ orderId, amount, onClose, onBack }: Props
     setConfirming(true);
     try {
       await api.post(`/payments/kaspi/confirm/${orderId}`);
-      setWaitingDispatcher(true);
     } catch {
-      setConfirming(false);
+      // endpoint may not respond — dispatcher will confirm manually
     }
+    setWaitingDispatcher(true);
   };
 
   return (
@@ -82,6 +82,21 @@ export default function KaspiQrModal({ orderId, amount, onClose, onBack }: Props
                 {amount.toLocaleString('ru-KZ')} ₸
               </div>
             </div>
+
+            {/* Mobile pay link */}
+            <a
+              href="https://pay.kaspi.kz/pay/migb2drv"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'block', width: '100%', padding: '14px', marginBottom: 12,
+                borderRadius: 14, background: '#E50000', color: '#fff',
+                fontWeight: 800, fontSize: 15, textDecoration: 'none',
+                boxSizing: 'border-box',
+              }}
+            >
+              📲 Открыть Kaspi для оплаты
+            </a>
 
             {/* QR image */}
             <div style={{

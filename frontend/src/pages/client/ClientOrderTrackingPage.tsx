@@ -147,7 +147,7 @@ export default function ClientOrderTrackingPage() {
               {STATUS_LABEL[order.status] ?? order.status}
             </span>
           </div>
-          {etaDuration !== null && isActive && (
+          {etaDuration !== null && isActive && order.delivery && (
             <div className="eta-block">
               <div className="eta-value">{formatEta(etaDuration)}</div>
               <div className="eta-label">до доставки · {legToClient?.distanceKm} км</div>
