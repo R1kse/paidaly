@@ -163,6 +163,7 @@ export default function ClientCheckoutPage() {
   };
 
   const totalPrice = cart.lines.reduce((s, l) => s + l.basePrice * l.quantity, 0);
+  const mobile = window.innerWidth < 769;
 
   return (
     <>
@@ -174,7 +175,13 @@ export default function ClientCheckoutPage() {
         onBack={() => setKaspiModal(null)}
       />
     )}
-    <div className="checkout">
+    <div
+      className="checkout"
+      style={mobile
+        ? { display: 'flex', flexDirection: 'column', gap: 16, width: '100%', boxSizing: 'border-box' }
+        : { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'start', width: '100%', boxSizing: 'border-box' }
+      }
+    >
       <div className="has-mobile-cta checkout-form-col">
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
