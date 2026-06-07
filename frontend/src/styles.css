@@ -743,6 +743,9 @@ label.inline input[type=checkbox] { width: auto; }
   grid-template-columns: 1fr 1fr;
   gap: 24px;
   align-items: start;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 /* ─── Map ────────────────────────────────────────────────── */
@@ -2014,6 +2017,7 @@ hr {
 
   /* ── ClientCheckoutPage ── */
   .checkout { grid-template-columns: 1fr !important; }
+  .checkout .card { max-width: 100%; overflow-x: hidden; box-sizing: border-box; }
 
   /* ── Фиксированная CTA-кнопка на мобиле ── */
   .mobile-cta-bar {

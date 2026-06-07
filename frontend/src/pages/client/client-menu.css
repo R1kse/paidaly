@@ -494,9 +494,12 @@
 }
 
 .checkout-delivery-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
   gap: 10px;
+}
+
+.checkout-delivery-grid .checkout-delivery-btn {
+  flex: 1 1 120px;
 }
 
 .checkout-delivery-btn {
@@ -597,15 +600,12 @@
   white-space: nowrap;
 }
 
-@media (max-width: 400px) {
-  .checkout-delivery-btn {
-    font-size: 11px;
-    padding: 12px 8px;
-  }
+@media (max-width: 768px) {
   .checkout-address-row {
     flex-direction: column;
   }
   .checkout-search-btn {
-    width: 100%;
+    width: 100% !important;
+    flex-shrink: unset !important;
   }
 }
