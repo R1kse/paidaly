@@ -4,7 +4,7 @@ import { useToastStore } from '../store/toast';
 
 const ERROR_MESSAGES: Record<string, string> = {
   OUT_OF_DELIVERY_ZONE: 'Адрес вне зоны 4 км',
-  MIN_ORDER_NOT_MET: 'Минимальная сумма заказа 5000 ?',
+  MIN_ORDER_NOT_MET: 'Минимальная сумма заказа 5000 ₸',
   OUT_OF_WORKING_HOURS: 'Мы работаем с 09:00 до 18:00',
   PREORDER_NOT_READY: 'Слишком рано для предзаказа',
   PREORDER_NOT_ALLOWED: 'Предзаказ недоступен',

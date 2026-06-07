@@ -1773,6 +1773,7 @@ hr {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  pointer-events: none;
 }
 
 .toast {
@@ -1785,6 +1786,7 @@ hr {
   border: 1.5px solid var(--line);
   color: var(--ink);
   animation: slideIn .2s ease;
+  pointer-events: auto;
 }
 
 .toast.success { background: #E0F1E6; border-color: rgba(58,158,95,.3); color: #1F6B3A; }
@@ -1793,6 +1795,20 @@ hr {
 @keyframes slideIn {
   from { transform: translateX(20px); opacity: 0; }
   to   { transform: translateX(0); opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  .toast-host {
+    bottom: calc(56px + env(safe-area-inset-bottom) + 12px);
+    right: 12px;
+    left: 12px;
+  }
+  .toast {
+    font-size: 14px;
+    padding: 14px 16px;
+    text-align: center;
+    border-radius: 14px;
+  }
 }
 
 /* ─── Responsive ──────────────────────────────────────────── */
