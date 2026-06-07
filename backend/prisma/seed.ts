@@ -442,11 +442,21 @@ async function upsertMenu() {
   const sauceGroupId = groupByName.get('Соус')!;
   const sweetenerGroupId = groupByName.get('Подсластитель')!;
 
+  // Rebuild modifier links from scratch to avoid stale links from previous seeds
+  await prisma.menuItemModifierGroup.deleteMany({
+    where: { menuItemId: { in: upsertedItems.map((i) => i.id) } },
+  });
+
   const links: { menuItemId: string; modifierGroupId: string }[] = [];
 
   for (const item of upsertedItems) {
+    // All dishes get portion sizes
     links.push({ menuItemId: item.id, modifierGroupId: portionGroupId });
-    links.push({ menuItemId: item.id, modifierGroupId: removeGroupId });
+
+    // "Remove ingredient" only makes sense for dishes with multiple ingredients
+    if (['MAIN', 'SALAD', 'BREAKFAST', 'SOUP'].includes(item.dishType)) {
+      links.push({ menuItemId: item.id, modifierGroupId: removeGroupId });
+    }
 
     if (item.dishType === 'MAIN' || item.dishType === 'SALAD') {
       links.push({ menuItemId: item.id, modifierGroupId: garnishGroupId });
@@ -458,10 +468,7 @@ async function upsertMenu() {
     }
   }
 
-  await prisma.menuItemModifierGroup.createMany({
-    data: links,
-    skipDuplicates: true,
-  });
+  await prisma.menuItemModifierGroup.createMany({ data: links });
 
   const newSlugs = MENU_ITEMS.map((i) => i.slug);
   await prisma.menuItem.updateMany({

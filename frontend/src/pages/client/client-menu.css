@@ -328,10 +328,12 @@
   color: #fff;
   font-size: 22px;
   cursor: pointer;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: 'Nunito', sans-serif;
   line-height: 1;
+  padding: 0 0 1px 0;
 }
 
 /* ── Modifier modal ── */
